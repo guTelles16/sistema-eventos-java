@@ -1,9 +1,17 @@
 package projeto_x;
 
 public class Categoria {
-
     private int id;
     private String nome;
+
+    public Categoria(String nome) {
+        setNome(nome);
+    }
+
+    public Categoria(int id, String nome) {
+        setNome(nome);
+        setId(id);
+    }
 
     public int getId() {
         return id;

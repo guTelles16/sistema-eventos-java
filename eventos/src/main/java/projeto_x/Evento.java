@@ -1,6 +1,5 @@
 package projeto_x;
 
-import java.time.LocalDate;
 import java.time.LocalDateTime;
 
 public class Evento {
@@ -10,6 +9,26 @@ public class Evento {
     private String local;
     private String descricao;
     private String tipo;
+    private int capacidade;
+
+    public Evento(String nome, String data, String local, String descricao, String tipo, int capacidade) {
+        setNome(nome);
+        setData(data);
+        setLocal(local);
+        setDescricao(descricao);
+        setTIpo(tipo);
+        setCapacidade(capacidade);
+    }
+
+    public Evento(int id, String nome, String data, String local, String descricao, String tipo, int capacidade) {
+        setNome(nome);
+        setData(data);
+        setLocal(local);
+        setDescricao(descricao);
+        setTIpo(tipo);
+        setCapacidade(capacidade);
+        setId(id);
+    }
 
     public int getId() {
         return id;
@@ -72,10 +91,10 @@ public class Evento {
     }
 
     public int getCapacidade() {
-        return 0; //Placcholder for capacity, can be implemented later
+        return capacidade;
     }
 
     public void setCapacidade(int capacidade) {
-        this.capacidade = capacidade; //Placcholder for capacity, can be implemented later
+        this.capacidade = capacidade;
     }
 }
