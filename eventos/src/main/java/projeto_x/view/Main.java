@@ -1,4 +1,4 @@
-package projeto_x;
+package projeto_x.view;
 
 public class Main {
     public static void main(String[] args) {
