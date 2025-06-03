@@ -1,14 +1,18 @@
 package projeto_x.util;
 
+import io.github.cdimascio.dotenv.Dotenv;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.SQLException;
 
 public class ConexaoBanco {
+    // Carrega o .env
+    private static final Dotenv dotenv = Dotenv.configure().load();
+
     public static Connection conectar() throws Exception {
-        String url = System.getenv("MYSQL_URL");
-        String user = System.getenv("MYSQL_USER");
-        String password = System.getenv("MYSQL_PASSWORD");
+        String url = dotenv.get("MYSQL_URL");
+        String user = dotenv.get("MYSQL_USER");
+        String password = dotenv.get("MYSQL_PASSWORD");
 
         // Verificação das variáveis de ambiente
         if (url == null || url.trim().isEmpty()) {

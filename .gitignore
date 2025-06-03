@@ -1,0 +1,22 @@
+# Ignorar o arquivo .env (contém senhas e configurações sensíveis!)
+.env
+
+# Ignorar a pasta target (gerada pelo Maven)
+**/target/
+
+# Ignorar aquivos .class específicos do Java
+*.class
+
+# Ignorar arquivos de IDE
+.idea/
+*.iml
+*.ipr
+*.iws
+
+# Ignorar arquivos do sistama
+.DS_Store
+Thumbs.db
+
+# Ignorar arquivos de log e temporários
+*.log
+*.tmp
