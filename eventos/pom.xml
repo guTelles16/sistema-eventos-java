@@ -42,7 +42,7 @@
                     </execution>
                 </executions>
                 <configuration>
-                    <mainClass>projeto_x.Main</mainClass>
+                    <mainClass>projeto_x.view.Main</mainClass>
                 </configuration>
             </plugin>
         </plugins>
