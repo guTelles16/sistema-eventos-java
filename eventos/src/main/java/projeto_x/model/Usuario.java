@@ -4,21 +4,21 @@ public class Usuario {
     private int id;
     private String nome;
     private String email;
-    private String senhaHash;
+    private String hashSenha;
 
     // Construtor completo (criar objeto a partir do banco de dados)
-    public Usuario(int id, String nome, String email, String senhaHash) {
+    public Usuario(int id, String nome, String email, String hashSenha) {
         setId(id);
         setNome(nome);
         setEmail(email);
-        setSenhaHash(senhaHash);
+        setHashSenha(hashSenha);
     }
 
     // Construtor para cadastro (id é gerado automaticamente)
-    public Usuario(String nome, String email, String senhaHash) {
+    public Usuario(String nome, String email, String hashSenha) {
         setNome(nome);
         setEmail(email);
-        setSenhaHash(senhaHash);
+        setHashSenha(hashSenha);
     }
 
     public int getId() {
@@ -26,6 +26,9 @@ public class Usuario {
     }
 
     public void setId(int id) {
+        if (id <= 0) {
+            throw new IllegalArgumentException("ID inválido: deve ser maior que zero!");
+        } 
         this.id = id;
     }
 
@@ -51,13 +54,14 @@ public class Usuario {
         this.email = email;
     }
 
-    public String getSenhaHash() {
-        return senhaHash;
+    // Retorna o hash da senha
+    public String getHashSenha() {
+        return hashSenha;
     }
 
     // Set para o hash, quando o banco de dados for carregado
-    public void setSenhaHash(String senhaHash) {
-        this.senhaHash = senhaHash;
+    public void setHashSenha(String hashSenha) {
+        this.hashSenha = hashSenha;
     }
 
     @Override
