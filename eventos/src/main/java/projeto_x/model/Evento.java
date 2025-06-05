@@ -1,33 +1,37 @@
 package projeto_x.model;
 
 import java.time.LocalDateTime;
+import projeto_x.model.Usuario;
 
 public class Evento {
     private int id;
     private String nome;
-    private String data;
+    private LocalDateTime dataHora;
     private String local;
     private String descricao;
     private String tipo;
     private int capacidade;
+    private Usuario criador;
 
-    public Evento(String nome, String data, String local, String descricao, String tipo, int capacidade) {
+    public Evento(String nome, LocalDateTime dataHora, String local, String descricao, String tipo, int capacidade, Usuario criador) {
         setNome(nome);
-        setData(data);
+        setDataHora(dataHora);
         setLocal(local);
         setDescricao(descricao);
         setTIpo(tipo);
         setCapacidade(capacidade);
+        this.criador = criador;
     }
 
-    public Evento(int id, String nome, String data, String local, String descricao, String tipo, int capacidade) {
+    public Evento(int id, String nome, LocalDateTime dataHora, String local, String descricao, String tipo, int capacidade, Usuario criador) {
         setNome(nome);
-        setData(data);
+        setDataHora(dataHora);
         setLocal(local);
         setDescricao(descricao);
         setTIpo(tipo);
         setCapacidade(capacidade);
         setId(id);
+        this.criador = criador;
     }
 
     public int getId() {
@@ -46,12 +50,12 @@ public class Evento {
         this.nome = nome;
     }
 
-    public String getData() {
-        return data;
+    public LocalDateTime getDataHora() {
+        return dataHora;
     }
 
-    public void setData(String data) {
-        this.data = data;
+    public void setDataHora(LocalDateTime dataHora) {
+        this.dataHora = dataHora;
     }
     
     public String getLocal() {
@@ -78,18 +82,6 @@ public class Evento {
         this.tipo = tipo;
     }
 
-    public LocalDateTime getDataHora() {
-        return LocalDateTime.parse(data);
-    }
-
-    public void setDataHora(LocalDateTime dataHora) {
-        this.data = dataHora.toString();
-    }
-
-    public void setData(LocalDateTime dataHora) {
-        this.data = data.toString();
-    }
-
     public int getCapacidade() {
         return capacidade;
     }
@@ -98,16 +90,20 @@ public class Evento {
         this.capacidade = capacidade;
     }
 
+    public Usuario getCriador() {
+        return criador;
+    }
+
+    public void setCriador(Usuario criador) {
+        this.criador = criador;
+    }
+
     @Override
     public String toString() {
         return "Evento{" +
                 "id=" + id +
                 ", nome='" + nome + '\'' +
-                ", data='" + data + '\'' +
-                ", local='" + local + '\'' +
-                ", descricao='" + descricao + '\'' +
-                ", tipo='" + tipo + '\'' +
-                ", capacidade=" + capacidade +
+                ", criador=" + (criador != null ? criador.getNome() : "Desconhecido") +
                 '}';
     }
 }
