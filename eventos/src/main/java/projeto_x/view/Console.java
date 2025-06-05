@@ -1,6 +1,7 @@
 package projeto_x.view;
 
 import projeto_x.service.AutenticacaoService;
+import projeto_x.model.Usuario;
 import java.util.Scanner;
 import java.util.Arrays;
 
