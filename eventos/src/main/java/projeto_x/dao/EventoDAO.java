@@ -6,8 +6,8 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.sql.Timestamp;
 import java.time.LocalDateTime;
-import java.sql.Date;
 
 
 public class EventoDAO {
@@ -27,8 +27,14 @@ public class EventoDAO {
         String sql = "INSERT INTO eventos (nome, data, local) VALUES (?, ?, ?)";
         try (PreparedStatement stmt = conexao.prepareStatement(sql)) {
             stmt.setString(1, evento.getNome());
-            stmt.setDate(2, evento.getDataHora());
+
+            // Converte LocalDateTime para Timestamp
+            LocalDateTime dataHoraEvento = evento.getDataHora();
+            Timestamp timestamp = Timestamp.valueOf(dataHoraEvento);
+            stmt.setTimestamp(2, timestamp);
+
             stmt.setString(3, evento.getLocal());
+            
             stmt.executeUpdate();
         } catch (SQLException e) {
             throw new Exception("Erro ao salvar evento: " + e.getMessage());
@@ -68,7 +74,5 @@ public class EventoDAO {
         }
         
         return evento; // Retorna o evento encontrado ou null   
-
-    
-}
+    }
 }

@@ -67,4 +67,38 @@ public class UsuarioDAO {
         }
         return usuario; // Retorna o usuário encontrado ou null
     }
+
+    /**
+     * Busca um usuário pelo ID no banco de dados (READ).
+     * 
+     * @param id O ID do usuário a ser buscado.
+     * @return O usuário encontrado se o ID existir, null caso contrário.
+     * @throws Exception Se ocorrer algum erro ao buscar o usuário (falha no banco de dados).
+     */
+    public Usuario buscarPorId(int id) throws Exception {
+        String sql = "SELECT * FROM usuarios WHERE id_usuario = ?";
+        Usuario usuario = null; // Inicializa o usuário como null
+        
+        try (PreparedStatement stmt = conexao.prepareStatement(sql)) {
+            // Define o ID no placeholder (?)
+            stmt.setInt(1, id);
+
+            // Executa a consulta e obtém o resultado
+            try (ResultSet rs = stmt.executeQuery()) {
+                // Verifica se há resultados
+                if (rs.next()) {
+                    // Cria um novo objeto Usuario com os dados retornados
+                    String nome = rs.getString("nm_usuario");
+                    String email = rs.getString("email");
+                    String hashSenha = rs.getString("senha");
+
+                    usuario = new Usuario(id, nome, email, hashSenha);
+                }
+            }
+
+        } catch (SQLException e) {
+            throw new Exception("Erro ao buscar usuário por ID: " + e.getMessage());
+        }
+        return usuario; // Retorna o usuário encontrado ou null
+    }
 }

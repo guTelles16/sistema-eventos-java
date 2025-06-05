@@ -32,6 +32,7 @@ CREATE TABLE IF NOT EXISTS eventos (
 CREATE TABLE IF NOT EXISTS confirmacoes_presença (
 	id_usuario INT NOT NULL,
     id_evento INT NOT NULL,
+    dt_hr_confirmacao DATETIME NOT NULL,
     st_confirmacao_evento VARCHAR(50) NOT NULL, -- CONFIRMADO / CANCELADO / EM ESPERA
     PRIMARY KEY (id_usuario, id_evento),
     FOREIGN KEY (id_usuario) REFERENCES usuarios(id_usuario),
