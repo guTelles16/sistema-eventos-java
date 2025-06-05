@@ -24,16 +24,15 @@ public class EventoDAO {
      * @throws Exception Se ocorrer algum erro ao salvar o evento (falha no banco de dados).
      */
     public void salvar(Evento evento) throws Exception {
-        String sql = "INSERT INTO eventos (nome, data, local) VALUES (?, ?, ?)";
+        String sql = "INSERT INTO eventos (nome, endereco_id, categoria_id, usuario_id, dt_hr_evento, ds_evento, qt_limite_vagas_evento ) VALUES (?, ?, ?, ?, ?, ?, ?)";
         try (PreparedStatement stmt = conexao.prepareStatement(sql)) {
             stmt.setString(1, evento.getNome());
-
-            // Converte LocalDateTime para Timestamp
-            LocalDateTime dataHoraEvento = evento.getDataHora();
-            Timestamp timestamp = Timestamp.valueOf(dataHoraEvento);
-            stmt.setTimestamp(2, timestamp);
-
-            stmt.setString(3, evento.getLocal());
+            stmt.setInt(2, evento.getEndereco().getID());
+            stmt.setInt(3, evento.getCategoria().getID());
+            stmt.setInt(4, evento.getCriador().getId());
+            stmt.setTimestamp(5, Timestamp.valueOf(evento.getDataHora()));
+            stmt.setString(6, evento.getDescricao());
+            stmt.setInt(7, evento.getCapacidade());
             
             stmt.executeUpdate();
         } catch (SQLException e) {
@@ -41,7 +40,6 @@ public class EventoDAO {
         }
     }
 
-    // Outros métodos como buscar, atualizar e deletar podem ser implementados aqui
     /**
      * Busca um evento pelo ID no banco de dados (READ).
      * 
@@ -63,10 +61,6 @@ public class EventoDAO {
                 if (rs.next()) {
                     // Cria um novo objeto Evento com os dados retornados
                     String nome = rs.getString("nome");
-                    LocalDateTime data = rs.getTimestamp("data").toLocalDateTime();
-                    String local = rs.getString("local");
-                    
-                    evento = new Evento(id, nome, data, local);
                 }
             }
         } catch (SQLException e) {

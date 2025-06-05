@@ -11,8 +11,7 @@ public class UsuarioDAO {
     private Connection conexao;
 
     public UsuarioDAO() throws Exception {
-        Connection conexao = ConexaoBanco.conectar();
-        this.conexao = conexao;
+        this.conexao = ConexaoBanco.conectar();
     }
 
     /**

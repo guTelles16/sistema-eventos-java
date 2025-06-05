@@ -3,20 +3,23 @@ package projeto_x.model;
 public class Usuario {
     private int id;
     private String nome;
+    private Endereco endereco;
     private String email;
     private String hashSenha;
 
     // Construtor completo (criar objeto a partir do banco de dados)
-    public Usuario(int id, String nome, String email, String hashSenha) {
+    public Usuario(int id, String nome, Endereco endereco, String email, String hashSenha) {
         setId(id);
         setNome(nome);
+        setEndereco(endereco);
         setEmail(email);
         setHashSenha(hashSenha);
     }
 
     // Construtor para cadastro (id é gerado automaticamente)
-    public Usuario(String nome, String email, String hashSenha) {
+    public Usuario(String nome, Endereco endereco, String email, String hashSenha) {
         setNome(nome);
+        setEndereco(endereco);
         setEmail(email);
         setHashSenha(hashSenha);
     }
@@ -41,6 +44,17 @@ public class Usuario {
             throw new IllegalArgumentException("Nome inválido: não pode ser nulo ou vazio!");
         }
         this.nome = nome;
+    }
+
+    public Endereco getEndereco() {
+        return endereco;
+    }
+
+    public void setEndereco(Endereco endereco) {
+        if (endereco == null) {
+            throw new IllegalArgumentException("Endereço inválido: não pode ser nulo!");
+        }
+        this.endereco = endereco;
     }
 
     public String getEmail() {

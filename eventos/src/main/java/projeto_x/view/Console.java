@@ -4,7 +4,7 @@ import projeto_x.service.AutenticacaoService;
 import java.util.Scanner;
 import java.util.Arrays;
 
-public class Main {
+public class Console {
     // Simulação de serviço de autenticação (deve ser instanciado corretamente)
     private static AutenticacaoService autenticacaoService = new AutenticacaoService();
 

@@ -6,37 +6,47 @@ CREATE TABLE IF NOT EXISTS categorias (
     nm_categoria VARCHAR(100) NOT NULL UNIQUE
 );
 
+CREATE TABLE IF NOT EXISTS enderecos (
+    id_endereco INT AUTO_INCREMENT PRIMARY KEY,
+    logradouro VARCHAR(255) NOT NULL,
+    nr_logradouro VARCHAR(255) NOT NULL,
+    complemento VARCHAR(255),
+    bairro VARCHAR(255) NOT NULL,
+    nr_cep VARCHAR(10) NOT NULL,
+);
+
 CREATE TABLE IF NOT EXISTS usuarios (
 	id_usuario INT AUTO_INCREMENT PRIMARY KEY,
     nm_usuario VARCHAR(255) NOT NULL,
+    endereco_id INT NOT NULL,
     email VARCHAR(255) NOT NULL UNIQUE,
-    senha VARCHAR(255) NOT NULL
+    senha VARCHAR(255) NOT NULL,
+    FOREIGN KEY (endereco_id) REFERENCES enderecos(id_endereco)
 );
 
 CREATE TABLE IF NOT EXISTS eventos (
 	id_evento INT AUTO_INCREMENT PRIMARY KEY,
     nm_evento VARCHAR(255) NOT NULL,
-    logradouro VARCHAR(255) NOT NULL,
-    nr_logradouro VARCHAR(10) NOT NULL,
-    complemento VARCHAR(255) NOT NULL,
-    nr_cep VARCHAR(10) NOT NULL,
-    id_categoria INT NOT NULL,
-    id_usuario INT NOT NULL,
+    endereco_id INT NOT NULL,
+    categoria_id INT NOT NULL,
+    usuario_id INT NOT NULL,
     dt_hr_evento DATETIME NOT NULL,
     ds_evento TEXT,
     qt_limite_vagas_evento INT DEFAULT 0,
-    FOREIGN KEY (id_categoria) REFERENCES categorias(id_categoria),
-    FOREIGN KEY (id_usuario) REFERENCES usuarios(id_usuario)
+    FOREIGN KEY (endereco_id) REFERENCES enderecos(id_endereco),
+    FOREIGN KEY (categoria_id) REFERENCES categorias(id_categoria),
+    FOREIGN KEY (usuario_id) REFERENCES usuarios(id_usuario)
 );
 
 CREATE TABLE IF NOT EXISTS confirmacoes_presença (
-	id_usuario INT NOT NULL,
-    id_evento INT NOT NULL,
+	usuario_id INT NOT NULL,
+    evento_id INT NOT NULL,
     dt_hr_confirmacao DATETIME NOT NULL,
     st_confirmacao_evento VARCHAR(50) NOT NULL, -- CONFIRMADO / CANCELADO / EM ESPERA
-    PRIMARY KEY (id_usuario, id_evento),
-    FOREIGN KEY (id_usuario) REFERENCES usuarios(id_usuario),
-    FOREIGN KEY (id_evento) REFERENCES eventos(id_evento)
+    UNIQUE (usuario_id, evento_id), -- Garante que o usuário só pode confirmar presença em um evento uma vez
+    PRIMARY KEY (usuario_id, evento_id),
+    FOREIGN KEY (usuario_id) REFERENCES usuarios(id_usuario),
+    FOREIGN KEY (evento_id) REFERENCES eventos(id_evento)
 );
 
 -- Inserir algumas categorias inicias

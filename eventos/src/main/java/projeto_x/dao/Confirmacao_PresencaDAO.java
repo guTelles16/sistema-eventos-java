@@ -17,8 +17,7 @@ public class Confirmacao_PresencaDAO {
     private EventoDAO eventoDAO;
 
     public Confirmacao_PresencaDAO(UsuarioDAO usuarioDAO, EventoDAO eventoDAO) throws Exception {
-        Connection conexao = ConexaoBanco.conectar();
-        this.conexao = conexao;
+        this.conexao = ConexaoBanco.conectar();
         this.usuarioDAO = usuarioDAO;
         this.eventoDAO = eventoDAO;
     }
@@ -30,7 +29,7 @@ public class Confirmacao_PresencaDAO {
      * @throws Exception Se ocorrer algum erro ao salvar a confirmação (falha no banco de dados).
      */
     public void salvar(Confirmacao_Presenca confirmacao) throws Exception {
-        String sql = "INSERT INTO confirmacoes_presenca (id_usuario, id_evento, dt_hr_confirmacao, status) VALUES (?, ?, ?, ?)";
+        String sql = "INSERT INTO confirmacoes_presenca (usuario_id, evento_id, dt_hr_confirmacao, status) VALUES (?, ?, ?, ?)";
         try (PreparedStatement stmt = conexao.prepareStatement(sql)) {
             stmt.setInt(1, confirmacao.getUsuario().getId());
             stmt.setInt(2, confirmacao.getEvento().getId());
@@ -51,27 +50,27 @@ public class Confirmacao_PresencaDAO {
     /**
      * Buscar a confirmação de presença pelo ID do usuário e ID do evento (READ).
      * 
-     * @param idUsuario O ID do usuário.
-     * @param idEvento O ID do evento.
+     * @param usuarioID O ID do usuário (foreign key).
+     * @param eventoID O ID do evento (foreign key).
      * @return A confirmação de presença encontrada se existir, null caso contrário.
      * @throws Exception Se ocorrer algum erro ao buscar a confirmação (falha no banco de dados).
      */
-    public Confirmacao_Presenca buscarPorUsuarioEvento(int idUsuario, int idEvento) throws Exception {
-        String sql = "SELECT * FROM confirmacoes_presenca WHERE id_usuario = ? AND id_evento = ?";
+    public Confirmacao_Presenca buscarPorUsuarioEvento(int usuarioID, int eventoID) throws Exception {
+        String sql = "SELECT * FROM confirmacoes_presenca WHERE usuario_id = ? AND evento_id = ?";
         Confirmacao_Presenca confirmacao = null; // Inicializa a confirmação como null
         
         try (PreparedStatement stmt = conexao.prepareStatement(sql)) {
             // Define os IDs nos placeholders (?)
-            stmt.setInt(1, idUsuario);
-            stmt.setInt(2, idEvento);
+            stmt.setInt(1, usuarioID);
+            stmt.setInt(2, eventoID);
 
             // Executa a consulta e obtém o resultado
             try (ResultSet rs = stmt.executeQuery()) {
                 // Verifica se há resultados
                 if (rs.next()) {
                     // Cria um novo objeto Confirmacao_Presenca com os dados retornados
-                    Usuario usuario = usuarioDAO.buscarPorId(rs.getInt("id_usuario"));
-                    Evento evento = eventoDAO.buscarPorId(rs.getInt("id_evento"));
+                    Usuario usuario = usuarioDAO.buscarPorId(rs.getInt("usuario_id"));
+                    Evento evento = eventoDAO.buscarPorId(rs.getInt("evento_id"));
                     LocalDateTime dataHoraConfirmacao = rs.getTimestamp("dt_hr_confirmacao").toLocalDateTime();
                     String status = rs.getString("status");
 
@@ -87,17 +86,17 @@ public class Confirmacao_PresencaDAO {
     /**
      * Conta o número de confirmações de presença para um evento específico (READ).
      * 
-     * @param idEvento O ID do evento.
+     * @param eventoID O ID do evento (foreign key).
      * @return O número de confirmações de presença para o evento.
      * @throws Exception Se ocorrer algum erro ao contar as confirmações (falha no banco de dados).
      */
-    public int contarConfirmacoesPorEvento(int idEvento) throws Exception {
-        String sql = "SELECT COUNT(*) AS total FROM confirmacoes_presenca WHERE id_evento = ?";
+    public int contarConfirmacoesPorEvento(int eventoID) throws Exception {
+        String sql = "SELECT COUNT(*) AS total FROM confirmacoes_presenca WHERE evento_id = ?";
         int total = 0; // Inicializa o total como 0
         
         try (PreparedStatement stmt = conexao.prepareStatement(sql)) {
             // Define o ID do evento no placeholder (?)
-            stmt.setInt(1, idEvento);
+            stmt.setInt(1, eventoID);
 
             // Executa a consulta e obtém o resultado
             try (ResultSet rs = stmt.executeQuery()) {
