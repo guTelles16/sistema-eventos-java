@@ -1,7 +1,6 @@
 package projeto_x.model;
 
 import java.time.LocalDateTime;
-import projeto_x.model.Usuario;
 
 public class Evento {
     private int id;
