@@ -12,24 +12,24 @@ public class Evento {
     private int capacidade;
     private Usuario criador;
 
-    public Evento(int id, String nome, LocalDateTime dataHora, Endereco endereco, Categoria categoria, String descricao, int capacidade, Usuario criador) {
+    public Evento(int id, String nome, Endereco endereco, LocalDateTime dataHora, String descricao, int capacidade, Categoria categoria, Usuario criador) {
+        setId(id);
         setNome(nome);
-        setDataHora(dataHora);
         setEndereco(endereco);
-        setCategoria(categoria);
+        setDataHora(dataHora);
         setDescricao(descricao);
         setCapacidade(capacidade);
-        setId(id);
+        setCategoria(categoria);
         setCriador(criador);;
     }
 
-    public Evento(String nome, LocalDateTime dataHora, Endereco endereco, Categoria categoria, String descricao, int capacidade, Usuario criador) {
+    public Evento(String nome, Endereco endereco, LocalDateTime dataHora, String descricao, int capacidade, Categoria categoria, Usuario criador) {
         setNome(nome);
-        setDataHora(dataHora);
         setEndereco(endereco);
-        setCategoria(categoria);
+        setDataHora(dataHora);
         setDescricao(descricao);
         setCapacidade(capacidade);
+        setCategoria(categoria);
         setCriador(criador);
     }
 
@@ -48,14 +48,6 @@ public class Evento {
     public void setNome(String nome) {
         this.nome = nome;
     }
-
-    public LocalDateTime getDataHora() {
-        return dataHora;
-    }
-
-    public void setDataHora(LocalDateTime dataHora) {
-        this.dataHora = dataHora;
-    }
     
     public Endereco getEndereco() {
         return endereco;
@@ -67,15 +59,13 @@ public class Evento {
         }
         this.endereco = endereco;
     }
-    public Categoria getCategoria() {
-        return categoria;
+
+     public LocalDateTime getDataHora() {
+        return dataHora;
     }
 
-    public void setCategoria(Categoria categoria) {
-        if (categoria == null) {
-            throw new IllegalArgumentException("Categoria não pode ser nula.");
-        }
-        this.categoria = categoria;
+    public void setDataHora(LocalDateTime dataHora) {
+        this.dataHora = dataHora;
     }
 
     public String getDescricao() {
@@ -92,6 +82,17 @@ public class Evento {
 
     public void setCapacidade(int capacidade) {
         this.capacidade = capacidade;
+    }
+
+    public Categoria getCategoria() {
+        return categoria;
+    }
+
+    public void setCategoria(Categoria categoria) {
+        if (categoria == null) {
+            throw new IllegalArgumentException("Categoria não pode ser nula.");
+        }
+        this.categoria = categoria;
     }
 
     public Usuario getCriador() {

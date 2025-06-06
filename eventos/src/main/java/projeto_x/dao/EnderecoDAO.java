@@ -1,16 +1,19 @@
 package projeto_x.dao;
 
-import projeto_x.mdodel.Endereco;
+import projeto_x.model.Endereco;
 import projeto_x.util.ConexaoBanco;
+import projeto_x.util.PersistenceException;
+
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.sql.Statement;
 
 public class EnderecoDAO {
     private Connection conexao;
 
-    public EnderecoDAO() throws Exception {
+    public EnderecoDAO() throws PersistenceException {
         this.conexao = ConexaoBanco.conectar();
     }
 
@@ -18,11 +21,12 @@ public class EnderecoDAO {
      * Salva um novo endereço no banco de dados (CREATE).
      * 
      * @param endereco O endereço a ser salvo.
-     * @throws Exception Se ocorrer algum erro ao salvar o endereço (falha no banco de dados).
+     * @throws PersistenceException Se ocorrer algum erro ao salvar o endereço (falha no banco de dados).
      */
-    public void salvar(projeto_x.model.Endereco endereco) throws Exception {
+    public int salvar(Endereco endereco) throws PersistenceException {
         String sql = "INSERT INTO enderecos (logradouro, nr_logradouro, complemento, bairro, nr_cep) VALUES (?, ?, ?, ?, ?)";
-        try (PreparedStatement stmt = conexao.prepareStatement(sql)) {
+        
+        try (PreparedStatement stmt = conexao.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
             stmt.setString(1, endereco.getLogradouro());
             stmt.setString(2, endereco.getNumeroLogradouro());
             stmt.setString(3, endereco.getComplemento());
@@ -30,8 +34,16 @@ public class EnderecoDAO {
             stmt.setString(5, endereco.getCEP());
 
             stmt.executeUpdate();
+
+            try (ResultSet rs = stmt.getGeneratedKeys()) {
+                if (rs.next()) {
+                    return rs.getInt(1); // Retorna o ID gerado 
+                }
+                throw new PersistenceException("Falha ao obter ID do endereço: nenhum ID foi gerado!");
+            }
+        
         } catch (SQLException e) {
-            throw new Exception("Erro ao salvar endereço: " + e.getMessage());
+            throw new PersistenceException("Erro ao salvar endereço: " + e.getMessage());
         }
     }
 
@@ -40,9 +52,9 @@ public class EnderecoDAO {
      * 
      * @param id O ID do endereço a ser buscado.
      * @return O endereço encontrado se o ID existir, null caso contrário.
-     * @throws Excepiton Se ocorrer algum erro ao buscar o endereço (falha no banco de dados).
+     * @throws PersistenceException Se ocorrer algum erro ao buscar o endereço (falha no banco de dados).
      */
-    public Endereco buscarPorId(int id) throws Exception {
+    public Endereco buscarPorID(int id) throws PersistenceException {
         String sql = "SELECT * FROM enderecos WHERE id_endereco = ?";
         Endereco endereco = null; // Inicializa o endereço como null
 
@@ -67,7 +79,7 @@ public class EnderecoDAO {
             }
         
         } catch (SQLException e) {
-            throw new Exception("Erro ao buscar endereço: " + e.getMessage());
+            throw new PersistenceException("Erro ao buscar endereço: " + e.getMessage());
         }
         return endereco; // Retorna o endereço encontrado ou null
     }

@@ -1,7 +1,10 @@
 package projeto_x.dao;
 
+import projeto_x.model.Endereco;
 import projeto_x.model.Usuario;
 import projeto_x.util.ConexaoBanco;
+import projeto_x.util.PersistenceException;
+
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -9,26 +12,40 @@ import java.sql.SQLException;
 
 public class UsuarioDAO {
     private Connection conexao;
+    private EnderecoDAO enderecoDAO;
 
-    public UsuarioDAO() throws Exception {
+    public UsuarioDAO(EnderecoDAO enderecoDAO) throws Exception {
         this.conexao = ConexaoBanco.conectar();
+        this.enderecoDAO = enderecoDAO;
     }
 
     /**
      * Salva um novo usuário no banco de dados (CREATE).
      * 
      * @param usuario O usuário a ser salvo.
-     * @throws Exception Se ocorrer algum erro ao salvar o usuário (falha no banco de dados).
+     * @return O ID do usuário recém-criado.
+     * @throws PersistenceException Se ocorrer algum erro ao salvar o usuário (falha no banco de dados).
      */
-    public void salvar(Usuario usuario) throws Exception {
-        String slq = "INSERT INTO usuarios (nm_usuario, email, senha) VALUES (?, ?, ?)";
-        try (PreparedStatement stmt = conexao.prepareStatement(slq)) {
+    public int salvar(Usuario usuario) throws PersistenceException {
+        String sql = "INSERT INTO usuarios (nm_usuario, endereco_id, email, senha) VALUES (?, ?, ?, ?)";
+    
+        try (PreparedStatement stmt = conexao.prepareStatement(sql, PreparedStatement.RETURN_GENERATED_KEYS)) {
             stmt.setString(1, usuario.getNome());
-            stmt.setString(2, usuario.getEmail());
-            stmt.setString(3, usuario.getHashSenha());
+            stmt.setInt(2, usuario.getEndereco().getID());
+            stmt.setString(3, usuario.getEmail());
+            stmt.setString(4, usuario.getHashSenha());
+        
             stmt.executeUpdate();
+
+            try (ResultSet rs = stmt.getGeneratedKeys()) {
+                if (rs.next()) {
+                    return rs.getInt(1); // Retorna o ID gerado
+                }
+                throw new PersistenceException("Falha ao obter o ID do usuário: nenhum ID foi gerado!");
+            }
+    
         } catch (SQLException e) {
-            throw new Exception("Erro ao salvar usuário: " + e.getMessage());
+            throw new PersistenceException("Erro ao salvar usuário: " + e.getMessage());
         }
     }
 
@@ -37,9 +54,9 @@ public class UsuarioDAO {
      * 
      * @param email O e-mail do usuário a ser buscado.
      * @return O usuário encontrado se o e-mail existir, null caso contrário.
-     * @throws Exception Se ocorrer algum erro ao buscar o usuário (falha no banco de dados).
+     * @throws PersistenceException Se ocorrer algum erro ao buscar o usuário (falha no banco de dados).
      */
-    public Usuario buscarPorEmail(String email) throws Exception {
+    public Usuario buscarPorEmail(String email) throws PersistenceException {
         String sql = "SELECT * FROM usuarios WHERE email = ?";
         Usuario usuario = null; // Inicializa o usuário como null
         
@@ -54,15 +71,16 @@ public class UsuarioDAO {
                     // Cria um novo objeto Usuario com os dados retornados
                     int idUsuario = rs.getInt("id_usuario");
                     String nome = rs.getString("nm_usuario");
+                    Endereco endereco = enderecoDAO.buscarPorID(rs.getInt("endereco_id"));
                     String emailRecuperado = rs.getString("email");
                     String hashSenha = rs.getString("senha");
 
-                    usuario = new Usuario(idUsuario, nome, emailRecuperado, hashSenha);
+                    usuario = new Usuario(idUsuario, nome, endereco, emailRecuperado, hashSenha);
                 }
             }
 
         } catch (SQLException e) {
-            throw new Exception("Erro ao buscar usuário por e-mail: " + e.getMessage());
+            throw new PersistenceException("Erro ao buscar usuário por e-mail: " + e.getMessage());
         }
         return usuario; // Retorna o usuário encontrado ou null
     }
@@ -72,9 +90,9 @@ public class UsuarioDAO {
      * 
      * @param id O ID do usuário a ser buscado.
      * @return O usuário encontrado se o ID existir, null caso contrário.
-     * @throws Exception Se ocorrer algum erro ao buscar o usuário (falha no banco de dados).
+     * @throws PersistenceException Se ocorrer algum erro ao buscar o usuário (falha no banco de dados).
      */
-    public Usuario buscarPorId(int id) throws Exception {
+    public Usuario buscarPorID(int id) throws PersistenceException {
         String sql = "SELECT * FROM usuarios WHERE id_usuario = ?";
         Usuario usuario = null; // Inicializa o usuário como null
         
@@ -87,16 +105,18 @@ public class UsuarioDAO {
                 // Verifica se há resultados
                 if (rs.next()) {
                     // Cria um novo objeto Usuario com os dados retornados
+                    int idUsuario = rs.getInt("id_usuario");
                     String nome = rs.getString("nm_usuario");
                     String email = rs.getString("email");
+                    Endereco endereco = enderecoDAO.buscarPorID(rs.getInt("endereco_id"));
                     String hashSenha = rs.getString("senha");
 
-                    usuario = new Usuario(id, nome, email, hashSenha);
+                    usuario = new Usuario(idUsuario, nome, endereco, email, hashSenha);
                 }
             }
 
         } catch (SQLException e) {
-            throw new Exception("Erro ao buscar usuário por ID: " + e.getMessage());
+            throw new PersistenceException("Erro ao buscar usuário por ID: " + e.getMessage());
         }
         return usuario; // Retorna o usuário encontrado ou null
     }

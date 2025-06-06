@@ -43,6 +43,7 @@ CREATE TABLE IF NOT EXISTS confirmacoes_presença (
     evento_id INT NOT NULL,
     dt_hr_confirmacao DATETIME NOT NULL,
     st_confirmacao_evento VARCHAR(50) NOT NULL, -- CONFIRMADO / CANCELADO / EM ESPERA
+    qt_total_confirmacoes INT DEFAULT 0, -- Inicializa com 0, incrementa a cada confirmação
     UNIQUE (usuario_id, evento_id), -- Garante que o usuário só pode confirmar presença em um evento uma vez
     PRIMARY KEY (usuario_id, evento_id),
     FOREIGN KEY (usuario_id) REFERENCES usuarios(id_usuario),

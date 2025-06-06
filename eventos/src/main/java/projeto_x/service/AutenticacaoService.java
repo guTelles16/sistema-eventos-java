@@ -35,7 +35,7 @@ public class AutenticacaoService {
         }
 
         // Verifica se o endereço é válido
-        if (enderecoDAO.buscarPorId(endereco == null) || endereco.getID() <= 0) {
+        if (enderecoDAO.buscarPorID(endereco == null) || endereco.getID() <= 0) {
             throw new IllegalArgumentException("Endereço inválido! Por favor, cadastre um endereço válido.");
         }
 

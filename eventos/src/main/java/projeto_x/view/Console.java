@@ -2,6 +2,8 @@ package projeto_x.view;
 
 import projeto_x.service.AutenticacaoService;
 import projeto_x.model.Usuario;
+import projeto_x.model.Categoria;
+import projeto_x.service.EventoService;
 import java.util.Scanner;
 import java.util.Arrays;
 
@@ -15,16 +17,16 @@ public class Console {
         System.out.print("Email: ");
         String email = scanner.nextLine();
         System.out.print("Senha: ");
-        char[] senhaChars = scanner.nextLine().toCharArray();
+        char[] senhaChar = scanner.nextLine().toCharArray();
 
         try {
-            if (autenticacaoService.cadastrarUsuario(nome, email, senhaChars)) {
+            if (autenticacaoService.cadastrarUsuario(nome, email, senhaChar)) {
                 System.out.println("Usuário cadastrado com sucesso!");
             } else {
                 System.out.println("Falha ao cadastrar usuário. Verifique seus dados!");
             }
         } finally {
-            Arrays.fill(senhaChars, ' '); // Zerando a senha na memória
+            Arrays.fill(senhaChar, ' '); // Zerando a senha na memória
         }
     }
 
@@ -32,10 +34,10 @@ public class Console {
         System.out.print("Email: ");
         String email = scanner.nextLine();
         System.out.print("Senha: ");
-        char[] senhaChars = scanner.nextLine().toCharArray();
+        char[] senhaChar = scanner.nextLine().toCharArray();
 
         try {
-            Usuario usuarioLogado = autenticacaoService.login(email, senhaChars);
+            Usuario usuarioLogado = autenticacaoService.login(email, senhaChar);
 
             if (usuarioLogado != null) {
                 System.out.println("Login bem-sucedido! Bem-vindo, " + usuarioLogado.getNome());
@@ -53,8 +55,8 @@ public class Console {
         System.out.print("Id : ");
         int id = scanner.nextInt();
 
-        try  { 
-            Categoria cadastrarEvento = eventoService.categoria(id, nome);
+        try  {
+            Categoria cadastrarEvento = EventoService.cadastrarEvento(id, nome);
                 System.out.println("Evento cadastrado com sucesso! ");
         } else {
                 System.out.println("Erro ao cadastrar evento ");
@@ -73,4 +75,4 @@ public class Console {
 
         scanner.close(); // Fechando o scanner apenas no final
     }
-
+}

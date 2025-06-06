@@ -4,6 +4,8 @@ import projeto_x.model.Confirmacao_Presenca;
 import projeto_x.model.Evento;
 import projeto_x.model.Usuario;
 import projeto_x.util.ConexaoBanco;
+import projeto_x.util.PersistenceException;
+
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -16,7 +18,7 @@ public class Confirmacao_PresencaDAO {
     private UsuarioDAO usuarioDAO;
     private EventoDAO eventoDAO;
 
-    public Confirmacao_PresencaDAO(UsuarioDAO usuarioDAO, EventoDAO eventoDAO) throws Exception {
+    public Confirmacao_PresencaDAO(UsuarioDAO usuarioDAO, EventoDAO eventoDAO) throws PersistenceException {
         this.conexao = ConexaoBanco.conectar();
         this.usuarioDAO = usuarioDAO;
         this.eventoDAO = eventoDAO;
@@ -26,24 +28,19 @@ public class Confirmacao_PresencaDAO {
      * Salva uma nova confirmação de presença no banco de dados (CREATE).
      * 
      * @param confirmacao A confirmação de presença a ser salva.
-     * @throws Exception Se ocorrer algum erro ao salvar a confirmação (falha no banco de dados).
+     * @throws PersistenceException Se ocorrer algum erro ao salvar a confirmação (falha no banco de dados).
      */
-    public void salvar(Confirmacao_Presenca confirmacao) throws Exception {
+    public void salvar(Confirmacao_Presenca confirmacao) throws PersistenceException {
         String sql = "INSERT INTO confirmacoes_presenca (usuario_id, evento_id, dt_hr_confirmacao, status) VALUES (?, ?, ?, ?)";
         try (PreparedStatement stmt = conexao.prepareStatement(sql)) {
             stmt.setInt(1, confirmacao.getUsuario().getId());
             stmt.setInt(2, confirmacao.getEvento().getId());
-
-            // Converte LocalDateTime para Timestamp
-            LocalDateTime dataHoraConfirmacao = confirmacao.getDataHoraConfirmacao();
-            Timestamp timestamp = Timestamp.valueOf(dataHoraConfirmacao);
-            stmt.setTimestamp(3, timestamp);
-
+            stmt.setTimestamp(3, Timestamp.valueOf(confirmacao.getDataHoraConfirmacao()));
             stmt.setString(4, confirmacao.getStatus());
 
             stmt.executeUpdate();
         } catch (SQLException e) {
-            throw new Exception("Erro ao salvar confirmação de presença: " + e.getMessage());
+            throw new PersistenceException("Erro ao salvar confirmação de presença: " + e.getMessage());
         }
     }
 
@@ -53,11 +50,10 @@ public class Confirmacao_PresencaDAO {
      * @param usuarioID O ID do usuário (foreign key).
      * @param eventoID O ID do evento (foreign key).
      * @return A confirmação de presença encontrada se existir, null caso contrário.
-     * @throws Exception Se ocorrer algum erro ao buscar a confirmação (falha no banco de dados).
+     * @throws PersistenceException Se ocorrer algum erro ao buscar a confirmação (falha no banco de dados).
      */
-    public Confirmacao_Presenca buscarPorUsuarioEvento(int usuarioID, int eventoID) throws Exception {
+    public Confirmacao_Presenca buscarPorUsuarioEvento(int usuarioID, int eventoID) throws PersistenceException {
         String sql = "SELECT * FROM confirmacoes_presenca WHERE usuario_id = ? AND evento_id = ?";
-        Confirmacao_Presenca confirmacao = null; // Inicializa a confirmação como null
         
         try (PreparedStatement stmt = conexao.prepareStatement(sql)) {
             // Define os IDs nos placeholders (?)
@@ -67,20 +63,22 @@ public class Confirmacao_PresencaDAO {
             // Executa a consulta e obtém o resultado
             try (ResultSet rs = stmt.executeQuery()) {
                 // Verifica se há resultados
-                if (rs.next()) {
-                    // Cria um novo objeto Confirmacao_Presenca com os dados retornados
-                    Usuario usuario = usuarioDAO.buscarPorId(rs.getInt("usuario_id"));
-                    Evento evento = eventoDAO.buscarPorId(rs.getInt("evento_id"));
-                    LocalDateTime dataHoraConfirmacao = rs.getTimestamp("dt_hr_confirmacao").toLocalDateTime();
-                    String status = rs.getString("status");
-
-                    confirmacao = new Confirmacao_Presenca(usuario, evento, dataHoraConfirmacao, status);
+                if (!rs.next()) {
+                    throw new PersistenceException("Confirmação de presença não encontrada para o ID do usuário: " + usuarioID + " e ID do evento: " + eventoID);
                 }
+
+                // Cria um novo objeto Confirmacao_Presenca com os dados retornados
+                Usuario usuario = usuarioDAO.buscarPorID(rs.getInt("usuario_id"));
+                Evento evento = eventoDAO.buscarPorID(rs.getInt("evento_id"));
+                LocalDateTime dataHoraConfirmacao = rs.getTimestamp("dt_hr_confirmacao").toLocalDateTime();
+                String status = rs.getString("status");
+
+                return new Confirmacao_Presenca(usuario, evento, dataHoraConfirmacao, status);
             }
+        
         } catch (SQLException e) {
-            throw new Exception("Erro ao buscar confirmação de presença: " + e.getMessage());
+            throw new PersistenceException("Erro ao buscar confirmação de presença: " + e.getMessage());
         }
-        return confirmacao;
     }
 
     /**
@@ -88,25 +86,27 @@ public class Confirmacao_PresencaDAO {
      * 
      * @param eventoID O ID do evento (foreign key).
      * @return O número de confirmações de presença para o evento.
-     * @throws Exception Se ocorrer algum erro ao contar as confirmações (falha no banco de dados).
+     * @throws PersistenceException Se ocorrer algum erro ao contar as confirmações (falha no banco de dados).
      */
-    public int contarConfirmacoesPorEvento(int eventoID) throws Exception {
+    public int contarConfirmacoesPorEvento(int eventoID) throws PersistenceException {
         String sql = "SELECT COUNT(*) AS total FROM confirmacoes_presenca WHERE evento_id = ?";
         int total = 0; // Inicializa o total como 0
         
-        try (PreparedStatement stmt = conexao.prepareStatement(sql)) {
+        try (PreparedStatement stmt = conexao.prepareStatement(sql, PreparedStatement.RETURN_GENERATED_KEYS)) {
             // Define o ID do evento no placeholder (?)
             stmt.setInt(1, eventoID);
 
             // Executa a consulta e obtém o resultado
             try (ResultSet rs = stmt.executeQuery()) {
-                if (rs.next()) {
-                    total = rs.getInt("total");
+                if (!rs.next()) {
+                    throw new PersistenceException("Nenhuma confirmação de presença encontrada para o ID do evento: " + eventoID);
                 }
+
+                total = rs.getInt("qt_total_confirmacoes");
             }
         } catch (SQLException e) {
-            throw new Exception("Erro ao contar confirmações de presença: " + e.getMessage());
+            throw new PersistenceException("Erro ao contar confirmações de presença: " + e.getMessage());
         }
-        return total;
+        return total; // Retorna o total de confirmações
     }
 }
