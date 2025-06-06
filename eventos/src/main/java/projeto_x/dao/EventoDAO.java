@@ -24,7 +24,7 @@ public class EventoDAO {
      * @throws Exception Se ocorrer algum erro ao salvar o evento (falha no banco de dados).
      */
     public void salvar(Evento evento) throws Exception {
-        String sql = "INSERT INTO eventos (nome, endereco_id, categoria_id, usuario_id, dt_hr_evento, ds_evento, qt_limite_vagas_evento ) VALUES (?, ?, ?, ?, ?, ?, ?)";
+        String sql = "INSERT INTO eventos (nm_evento, endereco_id, categoria_id, usuario_id, dt_hr_evento, ds_evento, qt_limite_vagas_evento) VALUES (?, ?, ?, ?, ?, ?, ?)";
         try (PreparedStatement stmt = conexao.prepareStatement(sql)) {
             stmt.setString(1, evento.getNome());
             stmt.setInt(2, evento.getEndereco().getID());
