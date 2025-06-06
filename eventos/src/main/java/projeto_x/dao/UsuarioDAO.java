@@ -52,12 +52,12 @@ public class UsuarioDAO {
                 // Verifica se há resultados
                 if (rs.next()) {
                     // Cria um novo objeto Usuario com os dados retornados
-                    int id = rs.getInt("id_usuario");
+                    int idUsuario = rs.getInt("id_usuario");
                     String nome = rs.getString("nm_usuario");
                     String emailRecuperado = rs.getString("email");
                     String hashSenha = rs.getString("senha");
 
-                    usuario = new Usuario(id, nome, emailRecuperado, hashSenha);
+                    usuario = new Usuario(idUsuario, nome, emailRecuperado, hashSenha);
                 }
             }
 

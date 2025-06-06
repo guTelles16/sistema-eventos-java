@@ -2,6 +2,8 @@ package projeto_x.service;
 
 import java.sql.SQLException;
 import java.util.Arrays;
+
+import projeto_x.model.Endereco;
 import projeto_x.model.Usuario;
 import projeto_x.dao.UsuarioDAO;
 import projeto_x.util.SenhaUtil;
@@ -14,18 +16,24 @@ public class AutenticacaoService {
     }
 
     /**
-     * Realiza o cadastro de um novo usuário, a partir do nome, e-mail e senha.
+     * Realiza o cadastro de um novo usuário, a partir do nome, endereço, e-mail e senha.
      * 
      * @param nome Nome do usuário.
      * @param email Email do usuário.
-     * @param senhaPlana Senha em texto claro do usuário
+     * @param endereco Endereço do usuário (foreign key)
+     * @param senhaPlana Senha em texto claro do usuário.
      * @return true se o cadastro foi realizado com sucesso, false caso contrário.
      * @throws Exception Se ocorrer algum erro durante o cadastro (falha no banco dados).
      */
-    public boolean cadastrarUsuario(String nome, String email, char[] senhaPlana) throws Exception {
-        if (nome == null || nome.trim().isEmpty() || email == null || email.trim().isEmpty() ||
+    public boolean cadastrarUsuario(String nome, String email, Endereco endereco, char[] senhaPlana) throws Exception {
+        if (nome == null || nome.trim().isEmpty() || email == null || email.trim().isEmpty() || endereco == null ||
                 senhaPlana == null || senhaPlana.length < 8) {
-            throw new IllegalArgumentException("Nome, email ou senha são inválidos. A senha deve ter pelo menos 8 caracteres!");
+            throw new IllegalArgumentException("Nome, endereço, email ou senha são inválidos. A senha deve ter pelo menos 8 caracteres!");
+        }
+
+        // Verifica se o endereço é válido
+        if (enderecoDAO.buscarPorId(endereco == null) || endereco.getID() <= 0) {
+            throw new IllegalArgumentException("Endereço inválido! Por favor, cadastre um endereço válido.");
         }
 
         // Verifica se o email já está em uso
@@ -37,7 +45,7 @@ public class AutenticacaoService {
         String hashSenha = SenhaUtil.hashSenha(senhaPlana);
 
         // Cria o objeto Usuario com o hash
-        Usuario novoUsuario = new Usuario(nome, email, hashSenha);
+        Usuario novoUsuario = new Usuario(nome, email, endereco, hashSenha);
 
         // Salvar as informações no banco de dados
         try {
