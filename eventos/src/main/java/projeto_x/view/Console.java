@@ -47,6 +47,21 @@ public class Console {
         }
     }
 
+    public static void cadastrarEvento(Scanner scanner) {
+        System.out.print("Nome: ");
+        String nome = scanner.nextLine();
+        System.out.print("Id : ");
+        int id = scanner.nextInt();
+
+        try  { 
+            Categoria cadastrarEvento = eventoService.categoria(id, nome);
+                System.out.println("Evento cadastrado com sucesso! ");
+        } else {
+                System.out.println("Erro ao cadastrar evento ");
+        }
+        }
+    
+
     public static void main(String[] args) {
         Scanner scanner = new Scanner(System.in);
         System.out.println("Bem-vindo ao sistema!");
@@ -54,7 +69,8 @@ public class Console {
         // Exemplo de chamada dos métodos
         menuCadastro(scanner);
         menuLogin(scanner);
+        cadastrarEvento(scanner);
 
         scanner.close(); // Fechando o scanner apenas no final
     }
-}
+
