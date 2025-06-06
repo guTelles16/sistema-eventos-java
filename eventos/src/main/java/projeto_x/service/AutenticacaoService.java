@@ -5,14 +5,17 @@ import java.util.Arrays;
 
 import projeto_x.model.Endereco;
 import projeto_x.model.Usuario;
+import projeto_x.dao.EnderecoDAO;
 import projeto_x.dao.UsuarioDAO;
 import projeto_x.util.SenhaUtil;
 
 public class AutenticacaoService {
     private UsuarioDAO usuarioDAO;
+    private EnderecoDAO enderecoDAO;
 
-    public AutenticacaoService(UsuarioDAO usuarioDAO) {
+    public AutenticacaoService(UsuarioDAO usuarioDAO, EnderecoDAO enderecoDAO) {
         this.usuarioDAO = usuarioDAO;
+        this.enderecoDAO = enderecoDAO;
     }
 
     /**
