@@ -56,7 +56,6 @@ public class EnderecoDAO {
      */
     public Endereco buscarPorID(int id) throws PersistenceException {
         String sql = "SELECT * FROM enderecos WHERE id_endereco = ?";
-        Endereco endereco = null; // Inicializa o endereço como null
 
         try (PreparedStatement stmt = conexao.prepareStatement(sql)) {
             // Define o ID no placeholder (?)
@@ -65,22 +64,23 @@ public class EnderecoDAO {
             // Executa a consulta e obtém o resultado
             try (ResultSet rs = stmt.executeQuery()) {
                 // Verifica se há resultados
-                if (rs.next()) {
-                    // Cria um novo objeto Endereco com os dados retornados
-                    int idEndereco = rs.getInt("id_endereco");
-                    String logradouro = rs.getString("logradouro");
-                    String numeroLogradouro = rs.getString("nr_logradouro");
-                    String complemento = rs.getString("complemento");
-                    String bairro = rs.getString("bairro");
-                    String cep = rs.getString("nr_cep");
-
-                    endereco = new Endereco(idEndereco, logradouro, numeroLogradouro, complemento, bairro, cep);
+                if (!rs.next()) {
+                    throw new PersistenceException("Endereço não encontrado com o ID: " + id);
                 }
+                
+                // Cria um novo objeto Endereco com os dados retornados
+                int idEndereco = rs.getInt("id_endereco");
+                String logradouro = rs.getString("logradouro");
+                String numeroLogradouro = rs.getString("nr_logradouro");
+                String complemento = rs.getString("complemento");
+                String bairro = rs.getString("bairro");
+                String cep = rs.getString("nr_cep");
+
+                return new Endereco(idEndereco, logradouro, numeroLogradouro, complemento, bairro, cep);
             }
         
         } catch (SQLException e) {
             throw new PersistenceException("Erro ao buscar endereço: " + e.getMessage());
         }
-        return endereco; // Retorna o endereço encontrado ou null
     }
 }

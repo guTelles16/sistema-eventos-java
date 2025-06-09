@@ -58,7 +58,6 @@ public class UsuarioDAO {
      */
     public Usuario buscarPorEmail(String email) throws PersistenceException {
         String sql = "SELECT * FROM usuarios WHERE email = ?";
-        Usuario usuario = null; // Inicializa o usuário como null
         
         try (PreparedStatement stmt = conexao.prepareStatement(sql)) {
             // Define o e-mail no placeholder (?)
@@ -67,22 +66,23 @@ public class UsuarioDAO {
             // Executa a consulta e obtém o resultado
             try (ResultSet rs = stmt.executeQuery()) {
                 // Verifica se há resultados
-                if (rs.next()) {
-                    // Cria um novo objeto Usuario com os dados retornados
-                    int idUsuario = rs.getInt("id_usuario");
-                    String nome = rs.getString("nm_usuario");
-                    Endereco endereco = enderecoDAO.buscarPorID(rs.getInt("endereco_id"));
-                    String emailRecuperado = rs.getString("email");
-                    String hashSenha = rs.getString("senha");
-
-                    usuario = new Usuario(idUsuario, nome, endereco, emailRecuperado, hashSenha);
+                if (!rs.next()) {
+                    throw new PersistenceException("Usuário não encontrado com o e-mail: " + email);
                 }
+                
+                // Cria um novo objeto Usuario com os dados retornados
+                int idUsuario = rs.getInt("id_usuario");
+                String nome = rs.getString("nm_usuario");
+                Endereco endereco = enderecoDAO.buscarPorID(rs.getInt("endereco_id"));
+                String emailRecuperado = rs.getString("email");
+                String hashSenha = rs.getString("senha");
+
+                return new Usuario(idUsuario, nome, endereco, emailRecuperado, hashSenha);
             }
 
         } catch (SQLException e) {
             throw new PersistenceException("Erro ao buscar usuário por e-mail: " + e.getMessage());
         }
-        return usuario; // Retorna o usuário encontrado ou null
     }
 
     /**
@@ -94,7 +94,6 @@ public class UsuarioDAO {
      */
     public Usuario buscarPorID(int id) throws PersistenceException {
         String sql = "SELECT * FROM usuarios WHERE id_usuario = ?";
-        Usuario usuario = null; // Inicializa o usuário como null
         
         try (PreparedStatement stmt = conexao.prepareStatement(sql)) {
             // Define o ID no placeholder (?)
@@ -103,21 +102,22 @@ public class UsuarioDAO {
             // Executa a consulta e obtém o resultado
             try (ResultSet rs = stmt.executeQuery()) {
                 // Verifica se há resultados
-                if (rs.next()) {
-                    // Cria um novo objeto Usuario com os dados retornados
-                    int idUsuario = rs.getInt("id_usuario");
-                    String nome = rs.getString("nm_usuario");
-                    String email = rs.getString("email");
-                    Endereco endereco = enderecoDAO.buscarPorID(rs.getInt("endereco_id"));
-                    String hashSenha = rs.getString("senha");
-
-                    usuario = new Usuario(idUsuario, nome, endereco, email, hashSenha);
+                if (!rs.next()) {
+                    throw new PersistenceException("Usuário não encontrado com o ID: " + id);
                 }
+
+                // Cria um novo objeto Usuario com os dados retornados
+                int idUsuario = rs.getInt("id_usuario");
+                String nome = rs.getString("nm_usuario");
+                String email = rs.getString("email");
+                Endereco endereco = enderecoDAO.buscarPorID(rs.getInt("endereco_id"));
+                String hashSenha = rs.getString("senha");
+
+                return new Usuario(idUsuario, nome, endereco, email, hashSenha);
             }
 
         } catch (SQLException e) {
             throw new PersistenceException("Erro ao buscar usuário por ID: " + e.getMessage());
         }
-        return usuario; // Retorna o usuário encontrado ou null
     }
 }

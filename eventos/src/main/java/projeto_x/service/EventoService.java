@@ -3,6 +3,8 @@ package projeto_x.service;
 import java.sql.SQLException;
 
 import projeto_x.dao.EventoDAO;
+import projeto_x.model.Evento;
+import projeto_x.util.PersistenceException;
 
 
 public class EventoService {
@@ -23,5 +25,7 @@ public class EventoService {
      * @param dataHora Data e hora do evento.
      * @param descricao Descrição do evento.
      * @param capacidade Limite de vagas do evento.
+     * @return true se o cadastro foi realizado com sucesso, false caso contrário.
+     * @throws PersistenceException Se ocorrer algum erro durante o cadastro (falha no banco de dados).
      */
 }
