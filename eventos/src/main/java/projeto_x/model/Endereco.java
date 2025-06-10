@@ -102,6 +102,18 @@ public class Endereco {
         this.cep = cep.replaceAll("[^0-9]", "");
     }
 
+    @Override
+    public String toString() {
+        return "Endereco{" +
+                "id=" + id +
+                ", logradouro='" + logradouro + '\'' +
+                ", numero_logradouro='" + numeroLogradouro + '\'' +
+                ", complemento='" + complemento + '\'' +
+                ", bairro='" + bairro + '\'' +
+                ", CEP='" + cep + '\'' +
+                '}';
+    } 
+
     public static boolean isNumerico(String input) {
         try {
             Long.parseLong(input); // Tenta converter a String para número

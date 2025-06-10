@@ -1,23 +1,17 @@
 package projeto_x.service;
 
-import java.sql.SQLException;
-import java.util.Arrays;
-
 import projeto_x.model.Endereco;
 import projeto_x.model.Usuario;
-import projeto_x.dao.EnderecoDAO;
 import projeto_x.dao.UsuarioDAO;
 import projeto_x.util.PersistenceException;
 import projeto_x.util.SenhaUtil;
 
+import java.sql.SQLException;
+
+import java.util.Arrays;
+
 public class AutenticacaoService {
     private UsuarioDAO usuarioDAO;
-    private EnderecoDAO enderecoDAO;
-
-    public AutenticacaoService(UsuarioDAO usuarioDAO, EnderecoDAO enderecoDAO) {
-        this.usuarioDAO = usuarioDAO;
-        this.enderecoDAO = enderecoDAO;
-    }
 
     /**
      * Realiza o cadastro de um novo usuário, a partir do nome, endereço, e-mail e senha.
@@ -27,9 +21,11 @@ public class AutenticacaoService {
      * @param endereco Endereço do usuário (foreign key)
      * @param senhaPlana Senha em texto claro do usuário.
      * @return true se o cadastro foi realizado com sucesso, false caso contrário.
+     * @throws IllegalArgumentException Se os dados de entrada forem inválidos.
      * @throws PersistenceException Se ocorrer algum erro durante o cadastro (falha no banco dados).
      */
-    public boolean cadastrarUsuario(String nome, String email, Endereco endereco, char[] senhaPlana) throws PersistenceException {
+    public boolean cadastrarUsuario(String nome, String email, Endereco endereco, char[] senhaPlana) 
+            throws IllegalArgumentException, PersistenceException {
         if (nome == null || nome.trim().isEmpty()) {
             Arrays.fill(senhaPlana, ' ');
             throw new IllegalArgumentException("O Nome do usuário não pode ser vazio!");
@@ -45,6 +41,16 @@ public class AutenticacaoService {
             throw new IllegalArgumentException("A senha deve conter no mínimo 8 caracteres!");
         }
 
+        // Validação do Objeto Endereco
+        if (endereco == null || endereco.getLogradouro() == null || endereco.getLogradouro().trim().isEmpty() ||
+            endereco.getNumeroLogradouro() == null || endereco.getNumeroLogradouro().trim().isEmpty() ||
+            endereco.getComplemento() == null || endereco.getComplemento().trim().isEmpty() ||
+            endereco.getBairro() == null || endereco.getBairro().trim().isEmpty() ||
+            endereco.getCEP() == null || endereco.getCEP().trim().isEmpty()) {
+            Arrays.fill(senhaPlana, ' ');
+            throw new IllegalArgumentException("Dados de endereço incompletos ou inválidos!");
+        }
+
         // Verifica se o email já está em uso
         if (usuarioDAO.buscarPorEmail(email) != null) {
             Arrays.fill(senhaPlana, ' ');
@@ -55,7 +61,7 @@ public class AutenticacaoService {
         String hashSenha = SenhaUtil.hashSenha(senhaPlana);
 
         // Cria o objeto Usuario com o hash
-        Usuario novoUsuario = new Usuario(nome, email, endereco, hashSenha);
+        Usuario novoUsuario = new Usuario(nome, endereco, email, hashSenha);
 
         // Salvar as informações no banco de dados
         try {

@@ -1,34 +1,75 @@
 package projeto_x.model;
 
 public class Usuario {
-    private int id;
+    private Integer id;
     private String nome;
     private Endereco endereco;
     private String email;
     private String hashSenha;
+    private Double latitude;
+    private Double longitude;
 
     // Construtor completo (criar objeto a partir do banco de dados)
-    public Usuario(int id, String nome, Endereco endereco, String email, String hashSenha) {
-        setId(id);
+    public Usuario(Integer id, String nome, Endereco endereco, String email, String hashSenha,
+            Double latitude, Double longitude) {
+        setID(id);
         setNome(nome);
         setEndereco(endereco);
         setEmail(email);
         setHashSenha(hashSenha);
+        setLatitude(latitude);
+        setLongitude(longitude);
     }
 
     // Construtor para cadastro (id é gerado automaticamente)
-    public Usuario(String nome, Endereco endereco, String email, String hashSenha) {
+    public Usuario(String nome, Endereco endereco, String email, String hashSenha,
+            Double latitude, Double longitude) {
         setNome(nome);
         setEndereco(endereco);
         setEmail(email);
         setHashSenha(hashSenha);
+        setLatitude(latitude);
+        setLongitude(longitude);
     }
 
-    public int getId() {
+    // Construtor para UsuarioDAO
+    public Usuario(Integer id, String nome, Endereco endereco, String email) {
+        setID(id);
+        setNome(nome);
+        setEndereco(endereco);
+        setEmail(email);
+        this.hashSenha = null;
+        this.latitude = null;
+        this.longitude = null;
+    }
+
+    // Construtor para EventoDAO
+    public Usuario (Integer id, String nome, String email) {
+        setID(id);
+        setNome(nome);
+        setEmail(email);
+        this.endereco = null;
+        this.hashSenha = null;
+        this.latitude = null;
+        this.longitude = null;
+    }
+
+    // Construtor para AutenticacaoService
+    public Usuario(String nome, Endereco endereco, String email, String hashSenha) {
+        this.id = null;
+        setNome(nome);
+        setEndereco(endereco);
+        setEmail(email);
+        setHashSenha(hashSenha);
+        this.latitude = null;
+        this.longitude = null;
+    }
+
+    public Integer getID() {
         return id;
     }
 
-    public void setId(int id) {
+    public void setID(Integer id) {
         if (id <= 0) {
             throw new IllegalArgumentException("ID inválido: deve ser maior que zero!");
         } 
@@ -77,6 +118,22 @@ public class Usuario {
     public void setHashSenha(String hashSenha) {
         this.hashSenha = hashSenha;
     }
+    
+    public Double getLatitude() {
+        return latitude;
+    }
+
+    public void setLatitude(Double latitude) {
+        this.latitude = latitude;
+    }
+
+    public Double getLongitude() {
+        return longitude;
+    }
+
+    public void setLongitude(Double longitude) {
+        this.longitude = longitude;
+    }
 
     @Override
     public String toString() {
@@ -84,6 +141,7 @@ public class Usuario {
                 "id=" + id +
                 ", nome='" + nome + '\'' +
                 ", email='" + email + '\'' +
+                (endereco != null ? ", endereco=" + endereco.getLogradouro() : "") +
                 '}';
     }
 }

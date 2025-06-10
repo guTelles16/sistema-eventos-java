@@ -32,9 +32,11 @@ public class Confirmacao_PresencaDAO {
      */
     public void salvar(Confirmacao_Presenca confirmacao) throws PersistenceException {
         String sql = "INSERT INTO confirmacoes_presenca (usuario_id, evento_id, dt_hr_confirmacao, status) VALUES (?, ?, ?, ?)";
-        try (PreparedStatement stmt = conexao.prepareStatement(sql)) {
-            stmt.setInt(1, confirmacao.getUsuario().getId());
-            stmt.setInt(2, confirmacao.getEvento().getId());
+        try (Connection conexao = ConexaoBanco.conectar()) {
+            PreparedStatement stmt = conexao.prepareStatement(sql);
+            
+            stmt.setInt(1, confirmacao.getUsuario().getID());
+            stmt.setInt(2, confirmacao.getEvento().getID());
             stmt.setTimestamp(3, Timestamp.valueOf(confirmacao.getDataHoraConfirmacao()));
             stmt.setString(4, confirmacao.getStatus());
 
@@ -55,7 +57,9 @@ public class Confirmacao_PresencaDAO {
     public Confirmacao_Presenca buscarPorUsuarioEvento(int usuarioID, int eventoID) throws PersistenceException {
         String sql = "SELECT * FROM confirmacoes_presenca WHERE usuario_id = ? AND evento_id = ?";
         
-        try (PreparedStatement stmt = conexao.prepareStatement(sql)) {
+        try (Connection conexao = ConexaoBanco.conectar()) {
+            PreparedStatement stmt = conexao.prepareStatement(sql);
+            
             // Define os IDs nos placeholders (?)
             stmt.setInt(1, usuarioID);
             stmt.setInt(2, eventoID);
@@ -105,6 +109,7 @@ public class Confirmacao_PresencaDAO {
                 total = rs.getInt("qt_total_confirmacoes");
             }
         } catch (SQLException e) {
+            System.err.println("Erro SQL ao contar confirmações de presença: " + e.getMessage());
             throw new PersistenceException("Erro ao contar confirmações de presença: " + e.getMessage());
         }
         return total; // Retorna o total de confirmações

@@ -21,6 +21,8 @@ CREATE TABLE IF NOT EXISTS usuarios (
     endereco_id INT NOT NULL,
     email VARCHAR(255) NOT NULL UNIQUE,
     senha VARCHAR(255) NOT NULL,
+    latitude_usuario DECIMAL(10, 8),
+    longitude_usuario DECIMAL(11, 8),
     FOREIGN KEY (endereco_id) REFERENCES enderecos(id_endereco)
 );
 
@@ -29,13 +31,15 @@ CREATE TABLE IF NOT EXISTS eventos (
     nm_evento VARCHAR(255) NOT NULL,
     endereco_id INT NOT NULL,
     categoria_id INT NOT NULL,
-    usuario_id INT NOT NULL,
+    usuario_criador_id INT NOT NULL,
     dt_hr_evento DATETIME NOT NULL,
     ds_evento TEXT,
     qt_limite_vagas_evento INT DEFAULT 0,
+    latitude_evento DECIMAL(10,8),
+    longitude_evento DECIMAL(11, 8),
     FOREIGN KEY (endereco_id) REFERENCES enderecos(id_endereco),
     FOREIGN KEY (categoria_id) REFERENCES categorias(id_categoria),
-    FOREIGN KEY (usuario_id) REFERENCES usuarios(id_usuario)
+    FOREIGN KEY (usuario_criador_id) REFERENCES usuarios(id_usuario)
 );
 
 CREATE TABLE IF NOT EXISTS confirmacoes_presença (

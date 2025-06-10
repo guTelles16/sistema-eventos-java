@@ -11,14 +11,6 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 
 public class UsuarioDAO {
-    private Connection conexao;
-    private EnderecoDAO enderecoDAO;
-
-    public UsuarioDAO(EnderecoDAO enderecoDAO) throws Exception {
-        this.conexao = ConexaoBanco.conectar();
-        this.enderecoDAO = enderecoDAO;
-    }
-
     /**
      * Salva um novo usuário no banco de dados (CREATE).
      * 
@@ -27,13 +19,21 @@ public class UsuarioDAO {
      * @throws PersistenceException Se ocorrer algum erro ao salvar o usuário (falha no banco de dados).
      */
     public int salvar(Usuario usuario) throws PersistenceException {
-        String sql = "INSERT INTO usuarios (nm_usuario, endereco_id, email, senha) VALUES (?, ?, ?, ?)";
+        String sql = "INSERT INTO usuarios (nm_usuario, endereco_id, email, senha, latitude_usuario, longitude_usuario) VALUES (?, ?, ?, ?, ?, ?)";
     
-        try (PreparedStatement stmt = conexao.prepareStatement(sql, PreparedStatement.RETURN_GENERATED_KEYS)) {
+        try (Connection conexao = ConexaoBanco.conectar()) {
+            PreparedStatement stmt = conexao.prepareStatement(sql, PreparedStatement.RETURN_GENERATED_KEYS);
+            
             stmt.setString(1, usuario.getNome());
-            stmt.setInt(2, usuario.getEndereco().getID());
+            
+            if (usuario.getEndereco() != null && usuario.getEndereco().getID() > 0) {
+                stmt.setInt(2, usuario.getEndereco().getID());
+            }
+
             stmt.setString(3, usuario.getEmail());
             stmt.setString(4, usuario.getHashSenha());
+            stmt.setDouble(5, usuario.getLatitude());
+            stmt.setDouble(6, usuario.getLongitude());
         
             stmt.executeUpdate();
 
@@ -57,27 +57,48 @@ public class UsuarioDAO {
      * @throws PersistenceException Se ocorrer algum erro ao buscar o usuário (falha no banco de dados).
      */
     public Usuario buscarPorEmail(String email) throws PersistenceException {
-        String sql = "SELECT * FROM usuarios WHERE email = ?";
+        String sql = "SELECT" +
+                    "u.id_usuario, u.nm_usuario AS nome_usuario, u.email AS email_usuario, " +
+                    "u.endereco_id AS endereco_usuario, " +
+                    "addr.logradouro, addr.nr_logradouro, addr.complemento, addr.bairro, addr.nr_cep " +
+                    "FROM usuarios u" +
+                    "JOIN enderecos addr ON u.endereco_id = addr.id_endereco " +
+                    "WHERE email = ?";
         
-        try (PreparedStatement stmt = conexao.prepareStatement(sql)) {
+        try (Connection conexao = ConexaoBanco.conectar()) {
+            PreparedStatement stmt = conexao.prepareStatement(sql);
+
             // Define o e-mail no placeholder (?)
             stmt.setString(1, email);
 
             // Executa a consulta e obtém o resultado
             try (ResultSet rs = stmt.executeQuery()) {
                 // Verifica se há resultados
-                if (!rs.next()) {
+                if (rs.next()) {
+                    // Cria um objeto Endereco com as informações necessárias
+                    Endereco enderecoUsuario = new Endereco(
+                        rs.getInt("endereco_usuario"),
+                        rs.getString("logradouro"),
+                        rs.getString("nr_logradouro"),
+                        rs.getString("complemento"),
+                        rs.getString("bairro"),
+                        rs.getString("nr_cep")
+                    );
+
+                    // Cria um novo objeto Usuario com os dados retornados
+                    int idUsuario = rs.getInt("id_usuario");
+                    String nome = rs.getString("nm_usuario");
+                    String emailRecuperado = rs.getString("email");
+
+                    return new Usuario(
+                        idUsuario,
+                        nome,
+                        enderecoUsuario,
+                        emailRecuperado
+                    );
+                } else {
                     throw new PersistenceException("Usuário não encontrado com o e-mail: " + email);
                 }
-                
-                // Cria um novo objeto Usuario com os dados retornados
-                int idUsuario = rs.getInt("id_usuario");
-                String nome = rs.getString("nm_usuario");
-                Endereco endereco = enderecoDAO.buscarPorID(rs.getInt("endereco_id"));
-                String emailRecuperado = rs.getString("email");
-                String hashSenha = rs.getString("senha");
-
-                return new Usuario(idUsuario, nome, endereco, emailRecuperado, hashSenha);
             }
 
         } catch (SQLException e) {
@@ -93,30 +114,53 @@ public class UsuarioDAO {
      * @throws PersistenceException Se ocorrer algum erro ao buscar o usuário (falha no banco de dados).
      */
     public Usuario buscarPorID(int id) throws PersistenceException {
-        String sql = "SELECT * FROM usuarios WHERE id_usuario = ?";
+        String sql = "SELECT" +
+                    "u.id_usuario, u.nm_usuario AS nome_usuario, u.email AS email_usuario, " +
+                    "u.endereco_id AS endereco_usuario, " +
+                    "addr.logradouro, addr.nr_logradouro, addr.complemento, addr.bairro, addr.nr_cep " +
+                    "FROM usuarios u" +
+                    "JOIN enderecos addr ON u.endereco_id = addr.id_endereco " +
+                    "WHERE id_usuario = ?";
         
-        try (PreparedStatement stmt = conexao.prepareStatement(sql)) {
+        try (Connection conexao = ConexaoBanco.conectar()) {
+            PreparedStatement stmt = conexao.prepareStatement(sql);
+
             // Define o ID no placeholder (?)
             stmt.setInt(1, id);
 
             // Executa a consulta e obtém o resultado
             try (ResultSet rs = stmt.executeQuery()) {
                 // Verifica se há resultados
-                if (!rs.next()) {
+                if (rs.next()) {
+
+                    // Cria um objeto Endereco com as informações necessárias
+                    Endereco enderecoUsuario = new Endereco(
+                        rs.getInt("endereco_usuario"),
+                        rs.getString("logradouro"),
+                        rs.getString("nr_logradouro"),
+                        rs.getString("complemento"),
+                        rs.getString("bairro"),
+                        rs.getString("nr_cep")
+                    );
+
+                    // Cria um novo objeto Usuario com os dados retornados
+                    int idUsuario = rs.getInt("id_usuario");
+                    String nome = rs.getString("nm_usuario");
+                    String email = rs.getString("email");
+
+                    return new Usuario(
+                        idUsuario,
+                        nome,
+                        enderecoUsuario,
+                        email
+                    );
+                } else {
                     throw new PersistenceException("Usuário não encontrado com o ID: " + id);
                 }
-
-                // Cria um novo objeto Usuario com os dados retornados
-                int idUsuario = rs.getInt("id_usuario");
-                String nome = rs.getString("nm_usuario");
-                String email = rs.getString("email");
-                Endereco endereco = enderecoDAO.buscarPorID(rs.getInt("endereco_id"));
-                String hashSenha = rs.getString("senha");
-
-                return new Usuario(idUsuario, nome, endereco, email, hashSenha);
             }
 
         } catch (SQLException e) {
+            System.err.println("Erro SQL ao buscar usuário pelo ID: " + e.getMessage());
             throw new PersistenceException("Erro ao buscar usuário por ID: " + e.getMessage());
         }
     }
