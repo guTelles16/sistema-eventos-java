@@ -10,13 +10,6 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 
 public class CategoriaDAO {
-
-    private Connection conexao;
-
-    public CategoriaDAO() throws PersistenceException {
-        this.conexao = ConexaoBanco.conectar();
-    }
-
     /**
      * Salva uma nova categoria no banco de dados (CREATE).
      * 
@@ -27,7 +20,8 @@ public class CategoriaDAO {
     public int salvar(Categoria categoria) throws PersistenceException {
         String slq = "INSERT INTO categorias (id_categoria, nm_categoria) VALUES (?, ?)";
         
-        try (PreparedStatement stmt = conexao.prepareStatement(slq, PreparedStatement.RETURN_GENERATED_KEYS)) {
+        try (Connection conexao = ConexaoBanco.conectar()) {
+            PreparedStatement stmt = conexao.prepareStatement(slq, PreparedStatement.RETURN_GENERATED_KEYS);
             stmt.setInt(1, categoria.getID());
             stmt.setString(1, categoria.getNome());
 
@@ -55,18 +49,21 @@ public class CategoriaDAO {
     public Categoria buscarCategoria(String nome) throws PersistenceException {
         String sql = "SELECT * FROM Categoria WHERE nm_categoria = ?";
 
-        try (PreparedStatement stmt = conexao.prepareStatement(sql)) {
+        try (Connection conexao = ConexaoBanco.conectar()) {
+            PreparedStatement stmt = conexao.prepareStatement(sql);
+            
             stmt.setString(1, nome);
             try (ResultSet rs = stmt.executeQuery()) {
                 if (!rs.next()) {
                     throw new PersistenceException("Categoria não encontrada com o nome: " + nome);
                 }
                 
-                int id = rs.getInt("id_categoria");
+                int idCategoria = rs.getInt("id_categoria");
                 String nomeRecuperado = rs.getString("nm_categoria");
                     
-                return new Categoria(id, nomeRecuperado);
+                return new Categoria(idCategoria, nomeRecuperado);
             }
+        
         } catch (SQLException e) {
             throw new PersistenceException("Erro ao buscar categoria: " + e.getMessage());
         }
@@ -82,9 +79,10 @@ public class CategoriaDAO {
     public Categoria buscarPorID(int id) throws PersistenceException {
         String sql = "SELECT * FROM categorias WHERE id_categoria = ?";
 
-        try (PreparedStatement stmt = conexao.prepareStatement(sql)) {
+        try (Connection conexao = ConexaoBanco.conectar()) {
+            PreparedStatement stmt = conexao.prepareStatement(sql);
+            
             stmt.setInt(1, id);
-
             try (ResultSet rs = stmt.executeQuery()) {
                 if (!rs.next()) {
                     throw new PersistenceException("Categoria não encontrada com o ID: " + id);

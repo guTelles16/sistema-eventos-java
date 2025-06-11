@@ -6,17 +6,31 @@ import java.sql.SQLException;
 import java.time.LocalDateTime;
 
 import projeto_x.dao.EventoDAO;
+import projeto_x.dao.UsuarioDAO;
+import projeto_x.dao.EnderecoDAO;
+import projeto_x.dao.CategoriaDAO;
 import projeto_x.model.Categoria;
 import projeto_x.model.Endereco;
 import projeto_x.model.Evento;
 import projeto_x.util.PersistenceException;
+import projeto_x.util.ConexaoBanco;
+
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
 
 
 public class EventoService {
     private EventoDAO eventoDAO;
+    private UsuarioDAO usuarioDAO;
+    private EnderecoDAO enderecoDAO;
+    private CategoriaDAO categoriaDAO;
 
-    public EventoService(EventoDAO eventoDAO) {
+    public EventoService(EventoDAO eventoDAO, UsuarioDAO usuarioDAO, EnderecoDAO enderecoDAO, CategoriaDAO categoriaDAO) {
         this.eventoDAO = eventoDAO;
+        this.usuarioDAO = usuarioDAO;
+        this.enderecoDAO = enderecoDAO;
+        this.categoriaDAO = categoriaDAO;
     }
 
     /**
@@ -33,43 +47,42 @@ public class EventoService {
      * @return true se o cadastro foi realizado com sucesso, false caso contrário.
      * @throws PersistenceException Se ocorrer algum erro durante o cadastro (falha no banco de dados).
      */
-    public void cadastrarEvento (String nome, Endereco endereco, Categoria categoria, String descricao, LocalDateTime dataHora, int capacidade, int usuarioID)
-        throws IllegalArgumentException, PersistenceException {
-    if (nome == null || nome.trim().isEmpty()) {
-        throw new IllegalArgumentException("O nome do evento não pode ser vazio!");
-    }
+    public void cadastrarEvento (String nome, Endereco endereco, String categoria, String descricao, LocalDateTime dataHora, int capacidade, int criadorID)
+            throws IllegalArgumentException, PersistenceException {
+        if (nome == null || nome.trim().isEmpty()) {
+            throw new IllegalArgumentException("O nome do evento não pode ser vazio!");
+        }
 
-    if (endereco == null || endereco.getLogradouro() == null || endereco.getLogradouro().trim().isEmpty() ||
+        // Validação do Objeto Endereco
+        if (endereco == null || endereco.getLogradouro() == null || endereco.getLogradouro().trim().isEmpty() ||
             endereco.getNumeroLogradouro() == null || endereco.getNumeroLogradouro().trim().isEmpty() ||
             endereco.getComplemento() == null || endereco.getComplemento().trim().isEmpty() ||
             endereco.getBairro() == null || endereco.getBairro().trim().isEmpty() ||
             endereco.getCEP() == null || endereco.getCEP().trim().isEmpty()) {
             throw new IllegalArgumentException("Dados de endereço incompletos ou inválidos!");
         }
+        
+        // Verifica se o endereço já está em uso
 
-    if (categoria == null || categoria.getNome().trim().isEmpty()) {
-        throw new IllegalArgumentException("A categoria do evento não pode ser vazio");
-    }
+        if (categoriaDAO.buscarCategoria(categoria) == null) {
+            throw new IllegalArgumentException("Categoria inválida!");
+        }
 
-    if (descricao == null || descricao.trim().isEmpty()){
-        throw new IllegalArgumentException("Descricao não pode estar vazia");
-    }
+        if (descricao == null || descricao.trim().isEmpty()){
+            throw new IllegalArgumentException("A Descrição não pode ser vazia!");
+        }
 
-    if (capacidade <= 0) {
-        throw new IllegalArgumentException("Capacidade não pode ser 0");
-    }
+        if (capacidade <= 0) {
+            throw new IllegalArgumentException("A Capacidade não pode ser menor que zero!");
+        }
 
-    if (!verificarUsuarioID(usuarioID)) {
-        throw new IllegalArgumentException("ID do usuário inválido");
-    }
+        if (usuarioDAO.buscarPorID(criadorID) == null && criadorID < 0) {
+            throw new IllegalArgumentException("ID do usuário inválido!");
+        }
 
-    if (!verificarDataHora(dataHora)) {
-        throw new IllegalArgumentException("A data e hora do evento invalida");
-    }
-
-    // Método para verificar validade do ID do usuário
-    public boolean verificarUsuarioID(int usuarioID) {
-        return usuarioID > 0;
+        if (verificarDataHora(dataHora) != true)  {
+            throw new IllegalArgumentException("A data e hora do evento invalida");
+        }
     }
 
     // Método para verificar se a data do evento é valida
@@ -84,11 +97,6 @@ public class EventoService {
         }
     }
     
-    // Método para listar evento Atraves do EventoDAO
-    public EventoService() throws Exception {
-        this.conexao = ConexaoBanco.conectar();
-    }
-
     public List<Evento> buscarEventos(int eventoID) throws Exception {
         List<Evento> eventos = new ArrayList<>();
         String sql = "SELECT* FROM eventos";

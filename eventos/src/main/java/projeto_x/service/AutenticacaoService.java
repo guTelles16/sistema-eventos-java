@@ -6,8 +6,6 @@ import projeto_x.dao.UsuarioDAO;
 import projeto_x.util.PersistenceException;
 import projeto_x.util.SenhaUtil;
 
-import java.sql.SQLException;
-
 import java.util.Arrays;
 
 public class AutenticacaoService {
@@ -25,7 +23,7 @@ public class AutenticacaoService {
      * @throws PersistenceException Se ocorrer algum erro durante o cadastro (falha no banco dados).
      */
     public boolean cadastrarUsuario(String nome, String email, Endereco endereco, char[] senhaPlana) 
-            throws IllegalArgumentException, PersistenceException {
+            throws PersistenceException, IllegalArgumentException {
         if (nome == null || nome.trim().isEmpty()) {
             Arrays.fill(senhaPlana, ' ');
             throw new IllegalArgumentException("O Nome do usuário não pode ser vazio!");
@@ -67,9 +65,6 @@ public class AutenticacaoService {
         try {
             usuarioDAO.salvar(novoUsuario);
             return true;
-        } catch (SQLException e) {
-            System.err.println("Erro interno ao salvar usuário " + e.getMessage()); // Log para o dev
-            throw new PersistenceException("Não foi possível cadastrar o usuário! Tente novamente mais tarde!");
         } finally {
             // Zera o array de caracteres da senha em texto claro
             Arrays.fill(senhaPlana, ' ');

@@ -7,12 +7,14 @@ public class Confirmacao_Presenca {
     private Evento evento;
     private LocalDateTime dataHoraConfirmacao;
     private String status;
+    private int totalConfirmacoes;
 
-    public Confirmacao_Presenca(Usuario usuario, Evento evento, LocalDateTime dataHoraConfirmacao, String status) {
+    public Confirmacao_Presenca(Usuario usuario, Evento evento, LocalDateTime dataHoraConfirmacao, String status, int totalConfirmacoes) {
         setUsuario(usuario);
         setEvento(evento);
         setDataHoraConfirmacao(dataHoraConfirmacao);
         setStatus(status);
+        setTotalConfirmacoes(totalConfirmacoes);
     }
 
     public Usuario getUsuario() {
@@ -56,12 +58,24 @@ public class Confirmacao_Presenca {
         this.status = status;
     }
 
+     public int getTotalConfirmacoes() {
+        return totalConfirmacoes;
+    }
+
+    public void setTotalConfirmacoes(int totalConfirmacoes) {
+        if (totalConfirmacoes < 0) {
+            throw new IllegalArgumentException("Total de confirmações inválido: não pode ser menor que zero!");
+        }
+        this.totalConfirmacoes = totalConfirmacoes;
+    }
+
     @Override
     public String toString() {
         return "Confirmacao_Presenca{" +
                 "usuario=" + (usuario != null ? usuario.getNome() : "N/A") + 
                 ", evento=" + (evento != null ? evento.getNome() : "N/A") + 
-                ", status='" + status + '\''+ 
+                ", status='" + status + '\'' +
+                ", total_confirmacoes='" + totalConfirmacoes + '\'' + 
                 '}';
     }
 }

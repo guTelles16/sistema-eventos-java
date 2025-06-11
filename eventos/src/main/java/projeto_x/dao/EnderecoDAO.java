@@ -11,12 +11,6 @@ import java.sql.SQLException;
 import java.sql.Statement;
 
 public class EnderecoDAO {
-    private Connection conexao;
-
-    public EnderecoDAO() throws PersistenceException {
-        this.conexao = ConexaoBanco.conectar();
-    }
-
     /**
      * Salva um novo endereço no banco de dados (CREATE).
      * 
@@ -26,7 +20,9 @@ public class EnderecoDAO {
     public int salvar(Endereco endereco) throws PersistenceException {
         String sql = "INSERT INTO enderecos (logradouro, nr_logradouro, complemento, bairro, nr_cep) VALUES (?, ?, ?, ?, ?)";
         
-        try (PreparedStatement stmt = conexao.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
+        try (Connection conexao = ConexaoBanco.conectar()) {
+            PreparedStatement stmt = conexao.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS);
+            
             stmt.setString(1, endereco.getLogradouro());
             stmt.setString(2, endereco.getNumeroLogradouro());
             stmt.setString(3, endereco.getComplemento());
@@ -57,7 +53,9 @@ public class EnderecoDAO {
     public Endereco buscarPorID(int id) throws PersistenceException {
         String sql = "SELECT * FROM enderecos WHERE id_endereco = ?";
 
-        try (PreparedStatement stmt = conexao.prepareStatement(sql)) {
+        try (Connection conexao = ConexaoBanco.conectar()) {
+            PreparedStatement stmt = conexao.prepareStatement(sql);
+            
             // Define o ID no placeholder (?)
             stmt.setInt(1, id);
 

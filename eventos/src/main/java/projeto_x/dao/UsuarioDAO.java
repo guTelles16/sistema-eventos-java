@@ -11,6 +11,11 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 
 public class UsuarioDAO {
+    private EnderecoDAO enderecoDAO;
+
+    public UsuarioDAO(EnderecoDAO enderecoDAO) {
+        this.enderecoDAO = enderecoDAO;
+    }
     /**
      * Salva um novo usuário no banco de dados (CREATE).
      * 
@@ -57,13 +62,7 @@ public class UsuarioDAO {
      * @throws PersistenceException Se ocorrer algum erro ao buscar o usuário (falha no banco de dados).
      */
     public Usuario buscarPorEmail(String email) throws PersistenceException {
-        String sql = "SELECT" +
-                    "u.id_usuario, u.nm_usuario AS nome_usuario, u.email AS email_usuario, " +
-                    "u.endereco_id AS endereco_usuario, " +
-                    "addr.logradouro, addr.nr_logradouro, addr.complemento, addr.bairro, addr.nr_cep " +
-                    "FROM usuarios u" +
-                    "JOIN enderecos addr ON u.endereco_id = addr.id_endereco " +
-                    "WHERE email = ?";
+        String sql = "SELECT * FROM usuarios WHERE email = ?";
         
         try (Connection conexao = ConexaoBanco.conectar()) {
             PreparedStatement stmt = conexao.prepareStatement(sql);
@@ -75,26 +74,37 @@ public class UsuarioDAO {
             try (ResultSet rs = stmt.executeQuery()) {
                 // Verifica se há resultados
                 if (rs.next()) {
-                    // Cria um objeto Endereco com as informações necessárias
-                    Endereco enderecoUsuario = new Endereco(
-                        rs.getInt("endereco_usuario"),
-                        rs.getString("logradouro"),
-                        rs.getString("nr_logradouro"),
-                        rs.getString("complemento"),
-                        rs.getString("bairro"),
-                        rs.getString("nr_cep")
-                    );
-
                     // Cria um novo objeto Usuario com os dados retornados
-                    int idUsuario = rs.getInt("id_usuario");
-                    String nome = rs.getString("nm_usuario");
+                    Integer idUsuario = (Integer) rs.getObject("id_usuario");
+                    String nomeUsuario = rs.getString("nm_usuario");
                     String emailRecuperado = rs.getString("email");
+                    String hashSenha = rs.getString("senha");
+                    Double latitudeUsuario = (Double) rs.getObject("latitude_usuario");
+                    Double longitudeUsuario = (Double) rs.getObject("longitude_usuario");
+                    
+                    // Busca o ID da chave estrangeira
+                    int enderecoID = rs.getInt("endereco_id");
 
+                    // Busca o objeto Endereco
+                    Endereco enderecoUsuario = null;
+                    if (enderecoID > 0) {
+                        enderecoUsuario = enderecoDAO.buscarPorID(enderecoID);
+                        if (enderecoUsuario == null) {
+                            throw new PersistenceException("Endereço do evento com ID " + enderecoID + " não encontrado após a busca!");
+                        }
+                    } else {
+                        throw new PersistenceException("ID do Endereço do usuário inválido: " + enderecoID);
+                    }
+
+                    // Retorna o objeto Usuario completo
                     return new Usuario(
                         idUsuario,
-                        nome,
+                        nomeUsuario,
                         enderecoUsuario,
-                        emailRecuperado
+                        emailRecuperado,
+                        hashSenha,
+                        latitudeUsuario,
+                        longitudeUsuario
                     );
                 } else {
                     throw new PersistenceException("Usuário não encontrado com o e-mail: " + email);
@@ -102,6 +112,7 @@ public class UsuarioDAO {
             }
 
         } catch (SQLException e) {
+            System.err.println("Erro SQL ao buscar usuário por e-mail: " + e.getMessage());
             throw new PersistenceException("Erro ao buscar usuário por e-mail: " + e.getMessage());
         }
     }
@@ -114,13 +125,7 @@ public class UsuarioDAO {
      * @throws PersistenceException Se ocorrer algum erro ao buscar o usuário (falha no banco de dados).
      */
     public Usuario buscarPorID(int id) throws PersistenceException {
-        String sql = "SELECT" +
-                    "u.id_usuario, u.nm_usuario AS nome_usuario, u.email AS email_usuario, " +
-                    "u.endereco_id AS endereco_usuario, " +
-                    "addr.logradouro, addr.nr_logradouro, addr.complemento, addr.bairro, addr.nr_cep " +
-                    "FROM usuarios u" +
-                    "JOIN enderecos addr ON u.endereco_id = addr.id_endereco " +
-                    "WHERE id_usuario = ?";
+        String sql = "SELECT * FROM usuarios WHERE id_usuario = ?";
         
         try (Connection conexao = ConexaoBanco.conectar()) {
             PreparedStatement stmt = conexao.prepareStatement(sql);
@@ -132,27 +137,37 @@ public class UsuarioDAO {
             try (ResultSet rs = stmt.executeQuery()) {
                 // Verifica se há resultados
                 if (rs.next()) {
-
-                    // Cria um objeto Endereco com as informações necessárias
-                    Endereco enderecoUsuario = new Endereco(
-                        rs.getInt("endereco_usuario"),
-                        rs.getString("logradouro"),
-                        rs.getString("nr_logradouro"),
-                        rs.getString("complemento"),
-                        rs.getString("bairro"),
-                        rs.getString("nr_cep")
-                    );
-
                     // Cria um novo objeto Usuario com os dados retornados
-                    int idUsuario = rs.getInt("id_usuario");
-                    String nome = rs.getString("nm_usuario");
-                    String email = rs.getString("email");
+                    Integer idUsuario = (Integer) rs.getObject("id_usuario");
+                    String nomeUsuario = rs.getString("nm_usuario");
+                    String emailRecuperado = rs.getString("email");
+                    String hashSenha = rs.getString("senha");
+                    Double latitudeUsuario = (Double) rs.getObject("latitude_usuario");
+                    Double longitudeUsuario = (Double) rs.getObject("longitude_usuario");
+                    
+                    // Busca o ID da chave estrangeira
+                    int enderecoID = rs.getInt("endereco_id");
 
+                    // Busca o objeto Endereco
+                    Endereco enderecoUsuario = null;
+                    if (enderecoID > 0) {
+                        enderecoUsuario = enderecoDAO.buscarPorID(enderecoID);
+                        if (enderecoUsuario == null) {
+                            throw new PersistenceException("Endereço do usuário com ID " + enderecoID + " não encontrado após a busca!");
+                        }
+                    } else {
+                        throw new PersistenceException("ID do Endereço do usuário inválido: " + enderecoID);
+                    }
+
+                    // Retorna o objeto Usuario completo
                     return new Usuario(
                         idUsuario,
-                        nome,
+                        nomeUsuario,
                         enderecoUsuario,
-                        email
+                        emailRecuperado,
+                        hashSenha,
+                        latitudeUsuario,
+                        longitudeUsuario
                     );
                 } else {
                     throw new PersistenceException("Usuário não encontrado com o ID: " + id);

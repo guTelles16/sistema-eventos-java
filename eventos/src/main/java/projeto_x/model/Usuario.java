@@ -32,28 +32,6 @@ public class Usuario {
         setLongitude(longitude);
     }
 
-    // Construtor para UsuarioDAO
-    public Usuario(Integer id, String nome, Endereco endereco, String email) {
-        setID(id);
-        setNome(nome);
-        setEndereco(endereco);
-        setEmail(email);
-        this.hashSenha = null;
-        this.latitude = null;
-        this.longitude = null;
-    }
-
-    // Construtor para EventoDAO
-    public Usuario (Integer id, String nome, String email) {
-        setID(id);
-        setNome(nome);
-        setEmail(email);
-        this.endereco = null;
-        this.hashSenha = null;
-        this.latitude = null;
-        this.longitude = null;
-    }
-
     // Construtor para AutenticacaoService
     public Usuario(String nome, Endereco endereco, String email, String hashSenha) {
         this.id = null;

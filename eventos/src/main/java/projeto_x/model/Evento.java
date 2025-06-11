@@ -3,19 +3,19 @@ package projeto_x.model;
 import java.time.LocalDateTime;
 
 public class Evento {
-    private int id;
+    private Integer id;
     private String nome;
     private Endereco endereco;
     private Categoria categoria;
     private LocalDateTime dataHora;
     private String descricao;
-    private int capacidade;
-    private double latitude;
-    private double longitude;
+    private Integer capacidade;
+    private Double latitude;
+    private Double longitude;
     private Usuario criador;
 
-    public Evento(int id, String nome, Endereco endereco, Categoria categoria, LocalDateTime dataHora, String descricao, int capacidade, 
-            double latitude, double longitude, Usuario criador) {
+    public Evento(Integer id, String nome, Endereco endereco, Categoria categoria, LocalDateTime dataHora, String descricao, Integer capacidade, 
+            Double latitude, Double longitude, Usuario criador) {
         setID(id);
         setNome(nome);
         setEndereco(endereco);
@@ -28,8 +28,8 @@ public class Evento {
         setCriador(criador);
     }
 
-    public Evento(String nome, Endereco endereco, Categoria categoria, LocalDateTime dataHora, String descricao, int capacidade, 
-            double latitude, double longitude, Usuario criador) {
+    public Evento(String nome, Endereco endereco, Categoria categoria, LocalDateTime dataHora, String descricao, Integer capacidade, 
+            Double latitude, Double longitude, Usuario criador) {
         setNome(nome);
         setEndereco(endereco);
         setCategoria(categoria);
@@ -41,11 +41,11 @@ public class Evento {
         setCriador(criador);
     }
 
-    public int getID() {
+    public Integer getID() {
         return id;
     }
 
-    public void setID(int id) {
+    public void setID(Integer id) {
         this.id = id;
     }
 
@@ -95,7 +95,7 @@ public class Evento {
         this.descricao = descricao;
     }
 
-    public int getCapacidade() {
+    public Integer getCapacidade() {
         return capacidade;
     }
 
@@ -103,11 +103,11 @@ public class Evento {
         this.capacidade = capacidade;
     }
 
-    public double getLatitude() {
+    public Double getLatitude() {
         return latitude;
     }
 
-    public void setLatitude(double latitude) {
+    public void setLatitude(Double latitude) {
         this.latitude = latitude;
     }
 
@@ -115,7 +115,7 @@ public class Evento {
         return longitude;
     }
 
-    public void setLongitude(double longitude) {
+    public void setLongitude(Double longitude) {
         this.longitude = longitude;
     }
 

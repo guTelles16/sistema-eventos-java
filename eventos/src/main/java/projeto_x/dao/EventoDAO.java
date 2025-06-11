@@ -17,6 +17,15 @@ import java.sql.Timestamp;
 import java.time.LocalDateTime;
 
 public class EventoDAO {
+    private UsuarioDAO usuarioDAO;
+    private EnderecoDAO enderecoDAO;
+    private CategoriaDAO categoriaDAO;
+    
+    public EventoDAO(UsuarioDAO usuarioDAO, EnderecoDAO enderecoDAO, CategoriaDAO categoriaDAO) {
+        this.usuarioDAO = usuarioDAO;
+        this.enderecoDAO = enderecoDAO;
+        this.categoriaDAO = categoriaDAO;
+    }
     /**
      * Salva um novo evento no banco de dados (CREATE).
      * 
@@ -77,18 +86,7 @@ public class EventoDAO {
      * @throws PersistenceException Se ocorrer algum erro ao buscar o evento (falha no banco de dados).
      */
     public Evento buscarPorID(int id) throws PersistenceException {
-        String sql = "SELECT " +
-                     "e.id_evento, e.nm_evento AS titulo_evento, e.ds_evento, e.dt_hr_evento, e.qt_limite_vagas_evento, " +
-                     "e.latitude_evento, e.longitude_evento, " +
-                     "e.endereco_id AS endereco_local_evento, " +
-                     "u.id_usuario AS criador_id, u.nm_usuario AS criador_nome, u.email AS criador_email, " +
-                     "cat.id_categoria, cat.nm_categoria AS nome_categoria, " +
-                     "addr.logradouro, addr.nr_logradouro, addr.complemento, addr.bairro, addr.nr_cep " +
-                     "FROM eventos e " +
-                     "JOIN usuarios u ON e.usuario_criador_id = u.id_usuario " +
-                     "JOIN categorias cat ON e.id_categoria = cat.id_categoria " +
-                     "JOIN enderecos addr ON e.endereco_id = addr.id_endereco " +
-                     "WHERE e.id_evento = ?";
+        String sql = "SELECT * FROM eventos WHERE id_evento = ?";
         
         try (Connection conexao = ConexaoBanco.conectar()) {
             PreparedStatement stmt = conexao.prepareStatement(sql);
@@ -100,55 +98,70 @@ public class EventoDAO {
             try (ResultSet rs = stmt.executeQuery()) {
                 // Verifica se há resultados
                 if (rs.next()) {
-                // Cria um objeto Usuario com as informações necessárias
-                Usuario criador = new Usuario(
-                    rs.getInt("criador_id"),
-                    rs.getString("criador_nome"),
-                    rs.getString("criador_email")
-                );
+                    // Carrega os dados do próprio Evento
+                    Integer idEvento = (Integer) rs.getObject("id_evento");
+                    String nomeEvento = rs.getString("nm_evento");
+                    LocalDateTime dataHoraEvento = rs.getTimestamp("dt_hr_evento").toLocalDateTime();
+                    String descricaoEvento = rs.getString("ds_evento");
+                    Integer capacidadeEvento = (Integer) rs.getObject("limite_vagas");
 
-                // Cria um objeto Categoria com as informações necessárias
-                Categoria categoriaEvento = new Categoria(
-                    rs.getInt("id_categoria"),
-                    rs.getString("nome_categoria")
-                );
+                    // Usar getObject para que a coluna possa ser NULL no banco de dados
+                    Double latitudeEvento = (Double) rs.getObject("latitude_evento");
+                    Double longitudeEvento = (Double) rs.getObject("longitude_evento");
+                
+                    // Busca os IDs das chaves estrangeiras
+                    int enderecoID = rs.getInt("endereco_id");
+                    int categoriaID = rs.getInt("categoria");
+                    int criadorID = rs.getInt("usuario_criador_id");
+                    
+                    // Buscar os objetos completos
+                    Endereco enderecoLocalEvento = null;
+                    if (enderecoID > 0) {
+                        enderecoLocalEvento = enderecoDAO.buscarPorID(enderecoID);
+                        if (enderecoLocalEvento == null) {
+                            throw new PersistenceException("Endereço do evento com ID " + enderecoID + " não encontrado após a busca!");
+                        }
+                    } else {
+                        throw new PersistenceException("ID do Endereço do evento inválido: " + enderecoID);
+                    }
 
-                // Cria um objeto Endereço com as informações necessárias
-                Endereco enderecoLocalEvento = new Endereco(
-                    rs.getInt("endereco_local_evento"),
-                    rs.getString("logradouro"),
-                    rs.getString("nr_logradouro"),
-                    rs.getString("complemento"),
-                    rs.getString("bairro"),
-                    rs.getString("nr_cep")
-                );
+                    Categoria categoriaEvento = null;
+                    if (categoriaID > 0) {
+                        categoriaEvento = categoriaDAO.buscarPorID(categoriaID);
+                        if (categoriaEvento == null) {
+                            throw new PersistenceException("Categoria do evento com ID " + categoriaID + " não encontrado após a busca!");
+                        }
+                    } else {
+                        throw new PersistenceException("ID da Categoria do evento invalido: " + categoriaID);
+                    }
+                    
+                    Usuario criador = null;
+                    if (criadorID > 0) {
+                        criador = usuarioDAO.buscarPorID(criadorID);
+                        if (criador == null) {
+                            throw new PersistenceException("Criador do evento com ID " + criadorID + " não encontrado após a busca!");
+                        }
+                    } else {
+                        throw new PersistenceException("ID do Criador do evento inválido: " + criadorID);
+                    }
 
-                // Cria um novo objeto Evento com os dados retornados
-                int idEvento = rs.getInt("id_evento");
-                String nomeEvento = rs.getString("titulo_evento");
-                LocalDateTime dataHoraEvento = rs.getTimestamp("dt_hr_evento").toLocalDateTime();
-                String descricaoEvento = rs.getString("ds_evento");
-                int capacidadeEvento = rs.getInt("qt_limite_vagas_evento");
-                Double latitudeEvento = rs.getDouble("latitude_evento");
-                Double longitudeEvento = rs.getDouble("longitude_evento");
-
-                // Retorna o objeto Evento completo
-                return new Evento(
-                    idEvento,
-                    nomeEvento,
-                    enderecoLocalEvento,
-                    categoriaEvento,
-                    dataHoraEvento,
-                    descricaoEvento,
-                    capacidadeEvento,
-                    latitudeEvento,
-                    longitudeEvento,
-                    criador
-                );
-            } else {
-                throw new PersistenceException("Evento não encontrado com o ID: " + id);
+                    // Retorna o objeto Evento completo
+                    return new Evento(
+                        idEvento,
+                        nomeEvento,
+                        enderecoLocalEvento,
+                        categoriaEvento,
+                        dataHoraEvento,
+                        descricaoEvento,
+                        capacidadeEvento,
+                        latitudeEvento != null ? latitudeEvento : 0.0,
+                        longitudeEvento != null ? longitudeEvento : 0.0,
+                        criador
+                    );
+                } else {
+                    throw new PersistenceException("Evento não encontrado com o ID: " + id);
+                }
             }
-        }
 
         } catch (SQLException e) {
             System.err.println("Erro SQL ao buscar evento por ID: " + e.getMessage());

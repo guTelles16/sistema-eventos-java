@@ -14,12 +14,10 @@ import java.sql.Timestamp;
 import java.time.LocalDateTime;
 
 public class Confirmacao_PresencaDAO {
-    private Connection conexao;
     private UsuarioDAO usuarioDAO;
     private EventoDAO eventoDAO;
 
     public Confirmacao_PresencaDAO(UsuarioDAO usuarioDAO, EventoDAO eventoDAO) throws PersistenceException {
-        this.conexao = ConexaoBanco.conectar();
         this.usuarioDAO = usuarioDAO;
         this.eventoDAO = eventoDAO;
     }
@@ -34,9 +32,15 @@ public class Confirmacao_PresencaDAO {
         String sql = "INSERT INTO confirmacoes_presenca (usuario_id, evento_id, dt_hr_confirmacao, status) VALUES (?, ?, ?, ?)";
         try (Connection conexao = ConexaoBanco.conectar()) {
             PreparedStatement stmt = conexao.prepareStatement(sql);
-            
-            stmt.setInt(1, confirmacao.getUsuario().getID());
-            stmt.setInt(2, confirmacao.getEvento().getID());
+
+            if (confirmacao.getUsuario() != null && confirmacao.getUsuario().getID() > 0) {            
+                stmt.setInt(1, confirmacao.getUsuario().getID());
+            }
+
+            if (confirmacao.getEvento() != null && confirmacao.getEvento().getID() > 0) {
+                stmt.setInt(2, confirmacao.getEvento().getID());
+            }
+
             stmt.setTimestamp(3, Timestamp.valueOf(confirmacao.getDataHoraConfirmacao()));
             stmt.setString(4, confirmacao.getStatus());
 
@@ -55,7 +59,9 @@ public class Confirmacao_PresencaDAO {
      * @throws PersistenceException Se ocorrer algum erro ao buscar a confirmação (falha no banco de dados).
      */
     public Confirmacao_Presenca buscarPorUsuarioEvento(int usuarioID, int eventoID) throws PersistenceException {
-        String sql = "SELECT * FROM confirmacoes_presenca WHERE usuario_id = ? AND evento_id = ?";
+        String sql = "SELECT dt_hr_confirmacao, st_confirmacao_evento AS status_confirmacao, qt_total_confirmacoes AS total_confirmacoes " +
+                    "FROM confirmacoes_presenca " +
+                    "WHERE usuario_id = ? AND evento_id = ?";
         
         try (Connection conexao = ConexaoBanco.conectar()) {
             PreparedStatement stmt = conexao.prepareStatement(sql);
@@ -67,20 +73,33 @@ public class Confirmacao_PresencaDAO {
             // Executa a consulta e obtém o resultado
             try (ResultSet rs = stmt.executeQuery()) {
                 // Verifica se há resultados
-                if (!rs.next()) {
-                    throw new PersistenceException("Confirmação de presença não encontrada para o ID do usuário: " + usuarioID + " e ID do evento: " + eventoID);
+                if (rs.next()) {
+                    // Carregar os dados da própria Confirmacao_Presenca
+                    LocalDateTime dataHoraConfirmacao = rs.getTimestamp("dt_hr_confirmacao").toLocalDateTime();
+                    String statusConfirmacao = rs.getString("status_confirmacao");
+                    int totalConfirmacoes = rs.getInt("total_confirmacoes");
+
+                    // Busca os objetos Usuario e Evento
+                    Usuario usuarioInscrito = usuarioDAO.buscarPorID(usuarioID);
+                    Evento eventoConfirmado = eventoDAO.buscarPorID(eventoID);
+
+                    // Verifica se os objetos foram encontrados
+                    if (usuarioInscrito == null) {
+                        throw new PersistenceException("Usuário com ID " + usuarioID + " não encontrado para confirmação de presença!");
+                    }
+
+                    if (eventoConfirmado == null) {
+                        throw new PersistenceException("Evento com ID " + eventoID + "não encontrado para confirmação de presença!");
+                    }
+
+                    return new Confirmacao_Presenca(usuarioInscrito, eventoConfirmado, dataHoraConfirmacao, statusConfirmacao, totalConfirmacoes);
+                } else {
+                    throw new PersistenceException("Confirmação de presença não encontrada para o usuário com ID: " + usuarioID + " e evento com ID: " + eventoID);
                 }
-
-                // Cria um novo objeto Confirmacao_Presenca com os dados retornados
-                Usuario usuario = usuarioDAO.buscarPorID(rs.getInt("usuario_id"));
-                Evento evento = eventoDAO.buscarPorID(rs.getInt("evento_id"));
-                LocalDateTime dataHoraConfirmacao = rs.getTimestamp("dt_hr_confirmacao").toLocalDateTime();
-                String status = rs.getString("status");
-
-                return new Confirmacao_Presenca(usuario, evento, dataHoraConfirmacao, status);
             }
         
         } catch (SQLException e) {
+            System.err.println("Erro SQL ao buscar confirmação de presença: " + e.getMessage());
             throw new PersistenceException("Erro ao buscar confirmação de presença: " + e.getMessage());
         }
     }
@@ -96,7 +115,8 @@ public class Confirmacao_PresencaDAO {
         String sql = "SELECT COUNT(*) AS total FROM confirmacoes_presenca WHERE evento_id = ?";
         int total = 0; // Inicializa o total como 0
         
-        try (PreparedStatement stmt = conexao.prepareStatement(sql, PreparedStatement.RETURN_GENERATED_KEYS)) {
+        try (Connection conexao = ConexaoBanco.conectar()) {
+            PreparedStatement stmt = conexao.prepareStatement(sql, PreparedStatement.RETURN_GENERATED_KEYS);
             // Define o ID do evento no placeholder (?)
             stmt.setInt(1, eventoID);
 
