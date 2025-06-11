@@ -31,7 +31,7 @@ public class EscritaArquivoEvento {
             StringBuilder linha = new StringBuilder();
 
             // Dados do Evento
-            linha.append(evento.getId()).append("|");
+            linha.append(evento.getID()).append("|");
             linha.append(evento.getNome()).append("|");
             linha.append(evento.getDescricao()).append("|");
             linha.append(evento.getDataHora().format(FORMATTER)).append("|");
@@ -53,7 +53,7 @@ public class EscritaArquivoEvento {
             // Dados do Criador (Usuário)
             if (evento.getCriador() != null) {
                 Usuario criador = evento.getCriador();
-                linha.append(criador.getId()).append("|");
+                linha.append(criador.getID()).append("|");
                 linha.append(criador.getNome()).append("|");
                 linha.append(criador.getEmail()).append("|");
             } else {

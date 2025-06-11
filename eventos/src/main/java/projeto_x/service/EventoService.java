@@ -15,10 +15,6 @@ import projeto_x.model.Evento;
 import projeto_x.util.PersistenceException;
 import projeto_x.util.ConexaoBanco;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-
 
 public class EventoService {
     private EventoDAO eventoDAO;
@@ -94,30 +90,6 @@ public class EventoService {
     public void cadastrarCategoria(Categoria categoria) throws PersistenceException {
         if (categoria == null || categoria.getNome().trim().isEmpty()) {
             throw new IllegalArgumentException("Nome da categoria inválido!");
-        }
-    }
-    
-    public List<Evento> buscarEventos(int eventoID) throws Exception {
-        List<Evento> eventos = new ArrayList<>();
-        String sql = "SELECT* FROM eventos";
-
-        try (Connection conexao = ConexaoBanco.conectar()) {
-            PreparedStatement stmt = conexao.prepareStatement(sql);
-        }
-            Evento listarEvento = null;
-            if (eventoID > 0) {
-                listarEvento = eventoDAO.buscarPorID(eventoID);
-                if (listarEvento == null) {
-                    throw new PersistenceException("Evento com ID " + eventoID + " não encontrado após a busca!");
-                }
-            } else {
-                throw new PersistenceException("ID di evento inválido: " + eventoID);
-            }
-
-        } catch (SQLException e) {
-            throw new Exception("Erro ao buscar eventos: " + e.getMessage());
-        
-        return eventos;
         }
     }
 }

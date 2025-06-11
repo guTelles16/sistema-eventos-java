@@ -15,6 +15,8 @@ import java.sql.SQLException;
 import java.sql.Statement;
 import java.sql.Timestamp;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
 
 public class EventoDAO {
     private UsuarioDAO usuarioDAO;
@@ -167,5 +169,65 @@ public class EventoDAO {
             System.err.println("Erro SQL ao buscar evento por ID: " + e.getMessage());
             throw new PersistenceException("Erro ao buscar evento: " + e.getMessage());
         }
+    }
+
+    /**
+     * Busca todos os eventos cadastrados no banco de dados (READ).
+     * 
+     * @return
+     * @throws PersistenceException Se ocorrer algum erro ao buscar todos os eventos (falha no banco de dados).
+     */
+    public List<Evento> listarTodosEventos() throws PersistenceException {
+        String sql = "SELECT* FROM eventos";
+
+        List<Evento> eventos = new ArrayList<>();
+
+        try (Connection conexao = ConexaoBanco.conectar()) {
+            PreparedStatement stmt = conexao.prepareStatement(sql);
+            ResultSet rs = stmt.executeQuery();
+
+            while (rs.next()) {
+                Integer idEvento = (Integer) rs.getObject("id_evento");
+                String nomeEvento = rs.getString("nm_evento");
+                LocalDateTime dataHoraEvento = rs.getTimestamp("dt_hr_evento").toLocalDateTime();
+                String descricaoEvento = rs.getString("ds_evento");
+                Integer capacidadeEvento = (Integer) rs.getObject("qt_limite_vagas_evento");
+                Double latitudeEvento = (Double) rs.getObject("latitude_evento");
+                Double longitudeEvento = (Double) rs.getObject("longitude_evento");
+
+                // Implementação das DAO's para buscar os objetos
+                int enderecoID = rs.getInt("endereco_id");
+                Endereco enderecoLocalEvento = (enderecoID > 0) ? enderecoDAO.buscarPorID(enderecoID) : null;
+                if (enderecoLocalEvento == null) {
+                    throw new PersistenceException("ID do endereço do evento inválido ou inexistente!");
+                }
+
+                int categoriaID = rs.getInt("categoria_id");
+                Categoria categoriaEvento = (categoriaID > 0) ? categoriaDAO.buscarPorID(categoriaID) : null;
+                if (categoriaEvento == null) {
+                    throw new PersistenceException("ID da categoria do evento inválido ou inexistente!");
+                }
+
+                int criadorID = rs.getInt("usuario_criador_id");
+                Usuario criador = (criadorID > 0) ? usuarioDAO.buscarPorID(criadorID) : null;
+                if (criador == null) {
+                    throw new PersistenceException("ID do criador do evento inválido ou inexistente!");
+                }
+
+                // Cria o objeto Evento
+                Evento evento = new Evento(
+                    idEvento, nomeEvento, enderecoLocalEvento, categoriaEvento, dataHoraEvento,
+                    descricaoEvento, capacidadeEvento,
+                    latitudeEvento != null ? latitudeEvento : 0.0,
+                    longitudeEvento != null ? longitudeEvento : 0.0,
+                    criador
+                );
+                eventos.add(evento); // Adiciona a lista
+            }
+
+        } catch (SQLException e) {
+            throw new PersistenceException("Erro ao buscar eventos: " + e.getMessage());
+        }
+        return eventos;
     }
 }

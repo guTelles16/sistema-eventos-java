@@ -48,10 +48,10 @@ public class Usuario {
     }
 
     public void setID(Integer id) {
-        if (id <= 0) {
-            throw new IllegalArgumentException("ID inválido: deve ser maior que zero!");
-        } 
-        this.id = id;
+        if (id != null && id > 0) {
+            this.id = id;
+        }
+        throw new IllegalArgumentException("ID inválido: deve ser maior que zero!");
     }
 
     public String getNome() {
@@ -102,6 +102,9 @@ public class Usuario {
     }
 
     public void setLatitude(Double latitude) {
+        if (latitude != null && (latitude < -90.0 || latitude > 90.0)) {
+            throw new IllegalArgumentException("Latitude inválida: deve estar entre -90 e +90!");
+        }
         this.latitude = latitude;
     }
 
@@ -110,6 +113,9 @@ public class Usuario {
     }
 
     public void setLongitude(Double longitude) {
+        if (longitude != null && (longitude < -180.0 || longitude > 180.0)) {
+            throw new IllegalArgumentException("Longitude inválida: deve estar entre -180 e +180!");
+        }
         this.longitude = longitude;
     }
 

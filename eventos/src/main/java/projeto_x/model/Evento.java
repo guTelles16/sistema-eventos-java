@@ -46,7 +46,10 @@ public class Evento {
     }
 
     public void setID(Integer id) {
-        this.id = id;
+        if (id != null && id > 0) {
+            this.id = id;
+        }
+        throw new IllegalArgumentException("ID inválido: deve ser maior que zero!");
     }
 
     public String getNome() {
@@ -99,8 +102,11 @@ public class Evento {
         return capacidade;
     }
 
-    public void setCapacidade(int capacidade) {
-        this.capacidade = capacidade;
+    public void setCapacidade(Integer capacidade) {
+        if (capacidade != null && capacidade > 0) {
+            this.capacidade = capacidade;
+        }
+        throw new IllegalArgumentException("Capacidade inválida: deve ser maior que zero!");
     }
 
     public Double getLatitude() {
@@ -108,14 +114,20 @@ public class Evento {
     }
 
     public void setLatitude(Double latitude) {
+        if (latitude != null && (latitude < -90.0 || latitude > 90.0)) {
+            throw new IllegalArgumentException("Latitude inválida: deve estar entre -90 e +90!");
+        }
         this.latitude = latitude;
     }
 
-    public double getLongitude() {
+    public Double getLongitude() {
         return longitude;
     }
 
     public void setLongitude(Double longitude) {
+        if (longitude != null && (longitude < -180.0 || longitude > 90.0)) {
+            throw new IllegalArgumentException("Longitude inválida: deve estar entre -180 e +180!");
+        }
         this.longitude = longitude;
     }
 
