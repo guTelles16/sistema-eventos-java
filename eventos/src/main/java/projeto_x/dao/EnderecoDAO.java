@@ -1,6 +1,7 @@
 package projeto_x.dao;
 
 import projeto_x.model.Endereco;
+import projeto_x.model.Usuario;
 import projeto_x.util.ConexaoBanco;
 import projeto_x.util.PersistenceException;
 
@@ -81,4 +82,44 @@ public class EnderecoDAO {
             throw new PersistenceException("Erro ao buscar endereço: " + e.getMessage());
         }
     }
+    // Atualizar
+    public boolean atualizar(Endereco endereco) throws PersistenceException {
+    String sql = "UPDATE usuarios SET logradouro, nr_logradouro, complemento, bairro, nr_cep WHERE id_endereco = ?";
+    
+    try (Connection conexao = ConexaoBanco.conectar();
+         PreparedStatement stmt = conexao.prepareStatement(sql)) {
+        
+        // Defina os parâmetros de acordo com as colunas que você quer atualizar
+        stmt.setString(1, endereco.getLogradouro());
+        stmt.setString(2, endereco.getNumeroLogradouro());
+        stmt.setString(3, endereco.getComplemento());
+        stmt.setString(3, endereco.getBairro());
+        stmt.setString(4, endereco.getCEP());
+   
+        // Condição WHERE: ID do usuário a ser atualizado
+        stmt.setInt(7, endereco.getID()); // Assumindo que seu POJO Usuario tem um getID()
+        
+        int linhasAfetadas = stmt.executeUpdate();
+        return linhasAfetadas > 0; // Retorna true se a atualização foi bem-sucedida
+        
+    } catch (SQLException e) {
+        throw new PersistenceException("Erro ao atualizar endereço: " + e.getMessage(), e);
+    }
+}
+    // Deletar
+    public boolean deletar(int id) throws PersistenceException {
+    String sql = "DELETE FROM usuarios WHERE id_endereco = ?"; // Adapte a tabela e a coluna ID
+    
+    try (Connection conexao = ConexaoBanco.conectar();
+         PreparedStatement stmt = conexao.prepareStatement(sql)) {
+        
+        stmt.setInt(1, id);
+        
+        int linhasAfetadas = stmt.executeUpdate();
+        return linhasAfetadas > 0; // Retorna true se a deleção foi bem-sucedida
+        
+    } catch (SQLException e) {
+        throw new PersistenceException("Erro ao deletar endereço: " + e.getMessage(), e);
+    }
+}
 }

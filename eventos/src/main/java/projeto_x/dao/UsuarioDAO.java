@@ -179,4 +179,60 @@ public class UsuarioDAO {
             throw new PersistenceException("Erro ao buscar usuário por ID: " + e.getMessage());
         }
     }
+    // Atualizar
+    public boolean atualizar(Usuario usuario) throws PersistenceException {
+    String sql = "UPDATE usuarios SET nm_usuario = ?, email_usuario = ?, hash_senha = ?, endereco_id = ?, latitude = ?, longitude = ? WHERE id_usuario = ?";
+    
+    try (Connection conexao = ConexaoBanco.conectar();
+         PreparedStatement stmt = conexao.prepareStatement(sql)) {
+        
+        // Defina os parâmetros de acordo com as colunas que você quer atualizar
+        stmt.setString(1, usuario.getNome());
+        stmt.setString(2, usuario.getEmail());
+        stmt.setString(3, usuario.getHashSenha()); // Lembre-se de que a senha deve ser atualizada como hash
+     // Para FKs (como endereco_id), verifique se o objeto relacionado e seu ID são válidos
+        if (usuario.getEndereco() != null && usuario.getEndereco().getID() > 0) {
+            stmt.setInt(4, usuario.getEndereco().getID());
+        } else {
+            stmt.setNull(4, java.sql.Types.INTEGER); // Ou lance uma exceção se for obrigatório
+        }
+        
+        // Para Double (Latitude/Longitude), trate null
+        if (usuario.getLatitude() != null) {
+            stmt.setDouble(5, usuario.getLatitude());
+        } else {
+            stmt.setNull(5, java.sql.Types.DOUBLE);
+        }
+        if (usuario.getLongitude() != null) {
+            stmt.setDouble(6, usuario.getLongitude());
+        } else {
+            stmt.setNull(6, java.sql.Types.DOUBLE);
+        }
+
+        // Condição WHERE: ID do usuário a ser atualizado
+        stmt.setInt(7, usuario.getID()); // Assumindo que seu POJO Usuario tem um getID()
+        
+        int linhasAfetadas = stmt.executeUpdate();
+        return linhasAfetadas > 0; // Retorna true se a atualização foi bem-sucedida
+        
+    } catch (SQLException e) {
+        throw new PersistenceException("Erro ao atualizar usuário: " + e.getMessage(), e);
+    }
+}
+    // Deletar
+    public boolean deletar(int id) throws PersistenceException {
+    String sql = "DELETE FROM usuarios WHERE id_usuario = ?"; // Adapte a tabela e a coluna ID
+    
+    try (Connection conexao = ConexaoBanco.conectar();
+         PreparedStatement stmt = conexao.prepareStatement(sql)) {
+        
+        stmt.setInt(1, id);
+        
+        int linhasAfetadas = stmt.executeUpdate();
+        return linhasAfetadas > 0; // Retorna true se a deleção foi bem-sucedida
+        
+    } catch (SQLException e) {
+        throw new PersistenceException("Erro ao deletar usuário: " + e.getMessage(), e);
+    }
+}
 }

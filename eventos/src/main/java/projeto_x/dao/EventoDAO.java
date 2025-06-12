@@ -207,4 +207,84 @@ public class EventoDAO {
             criador
         );
     }
+    //Atualizar
+    public boolean atualizar(Evento evento) throws PersistenceException {
+    String sql = "UPDATE usuarios SET nm_evento, endereco_id, categoria_id, usuario_id, dt_hr_evento, ds_evento, qt_limite_vagas_evento, latitude_evento, longitude_evento WHERE id_evento = ?";
+    
+    try (Connection conexao = ConexaoBanco.conectar();
+         PreparedStatement stmt = conexao.prepareStatement(sql)) {
+        
+        // Defina os parâmetros de acordo com as colunas que você quer atualizar
+        stmt.setString(1, evento.getNome());
+
+            if (evento.getEndereco() != null && evento.getEndereco().getID() > 0) {
+                stmt.setInt(2, evento.getEndereco().getID());
+            } else {
+                throw new PersistenceException("Endereço do evento é obrigatório e precisa ter um ID válido!");
+            }
+
+            if (evento.getCategoria() != null && evento.getCategoria().getID() > 0) {
+                stmt.setInt(3, evento.getCategoria().getID());
+            } else {
+                throw new PersistenceException("Categoria do evento é obrigatória e precisa ter um ID válido!");
+            }
+
+            if (evento.getCriador() != null && evento.getCategoria().getID() > 0) {
+                stmt.setInt(4, evento.getCriador().getID());
+            } else {
+                throw new PersistenceException("Criador do evento é obrigatório e precisa ter um ID válido!");
+            }
+
+            stmt.setTimestamp(5, Timestamp.valueOf(evento.getDataHora()));
+            stmt.setString(6, evento.getDescricao());
+            stmt.setInt(7, evento.getCapacidade());
+            stmt.setDouble(8, evento.getLatitude());
+            stmt.setDouble(9, evento.getLongitude());
+            
+            stmt.executeUpdate();
+    
+        if (evento.getEndereco() != null && evento.getEndereco().getID() > 0) {
+            stmt.setInt(4, evento.getEndereco().getID());
+        } else {
+            stmt.setNull(4, java.sql.Types.INTEGER); // Ou lance uma exceção se for obrigatório
+        }
+        
+        // Para Double (Latitude/Longitude), trate null
+        if (evento.getLatitude() != null) {
+            stmt.setDouble(5, evento.getLatitude());
+        } else {
+            stmt.setNull(5, java.sql.Types.DOUBLE);
+        }
+        if (evento.getLongitude() != null) {
+            stmt.setDouble(6, evento.getLongitude());
+        } else {
+            stmt.setNull(6, java.sql.Types.DOUBLE);
+        }
+
+        // Condição WHERE: ID do usuário a ser atualizado
+        stmt.setInt(7, evento.getID()); // Assumindo que seu POJO Usuario tem um getID()
+        
+        int linhasAfetadas = stmt.executeUpdate();
+        return linhasAfetadas > 0; // Retorna true se a atualização foi bem-sucedida
+        
+    } catch (SQLException e) {
+        throw new PersistenceException("Erro ao atualizar evento: " + e.getMessage(), e);
+    }
+}
+    // Deletar
+    public boolean deletar(int id) throws PersistenceException {
+    String sql = "DELETE FROM usuarios WHERE id_evento = ?"; // Adapte a tabela e a coluna ID
+    
+    try (Connection conexao = ConexaoBanco.conectar();
+         PreparedStatement stmt = conexao.prepareStatement(sql)) {
+        
+        stmt.setInt(1, id);
+        
+        int linhasAfetadas = stmt.executeUpdate();
+        return linhasAfetadas > 0; // Retorna true se a deleção foi bem-sucedida
+        
+    } catch (SQLException e) {
+        throw new PersistenceException("Erro ao deletar evento: " + e.getMessage(), e);
+    }
+}
 }

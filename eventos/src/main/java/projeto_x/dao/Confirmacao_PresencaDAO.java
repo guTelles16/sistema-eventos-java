@@ -134,4 +134,41 @@ public class Confirmacao_PresencaDAO {
         }
         return total; // Retorna o total de confirmações
     }
+    //Atualizar
+    public boolean atualizar(Confirmacao_Presenca confimacao) throws PersistenceException {
+    String sql = "UPDATE usuarios SET usuario_id, evento_id, dt_hr_confirmacao, status WHERE id_evento = ? AND id_usuario = ?";
+    
+    try (Connection conexao = ConexaoBanco.conectar();
+         PreparedStatement stmt = conexao.prepareStatement(sql)) {
+        
+        // Defina os parâmetros de acordo com as colunas que você quer atualizar
+        stmt.setString(1, confirmacao.getStatus());
+        stmt.setTimestamp(2, Timestamp.valueOf(confirmacao.getDataHoraConfirmacao()));
+        stmt.setString(3, confirmacao.getDataHora());
+        stmt.setInt(4, confirmacao.getUsuario().getID());
+        stmt.setInt(5, confirmacao.getEvento().getID());
+        
+        int linhasAfetadas = stmt.executeUpdate();
+        return linhasAfetadas > 0; // Retorna true se a atualização foi bem-sucedida
+        
+    } catch (SQLException e) {
+        throw new PersistenceException("Erro ao atualizar presença: " + e.getMessage(), e);
+    }
+}
+    // Deletar
+    public boolean deletar(int id) throws PersistenceException {
+    String sql = "DELETE FROM usuarios WHERE id_usuario = ?"; // Adapte a tabela e a coluna ID
+    
+    try (Connection conexao = ConexaoBanco.conectar();
+         PreparedStatement stmt = conexao.prepareStatement(sql)) {
+        
+        stmt.setInt(1, id);
+        
+        int linhasAfetadas = stmt.executeUpdate();
+        return linhasAfetadas > 0; // Retorna true se a deleção foi bem-sucedida
+        
+    } catch (SQLException e) {
+        throw new PersistenceException("Erro ao deletar presença: " + e.getMessage(), e);
+    }
+}
 }
