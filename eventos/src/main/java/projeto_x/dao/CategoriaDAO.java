@@ -3,6 +3,7 @@ package projeto_x.dao;
 import projeto_x.util.ConexaoBanco;
 import projeto_x.util.PersistenceException;
 import projeto_x.model.Categoria;
+import projeto_x.model.Usuario;
 
 import java.sql.Connection;
 import java.sql.PreparedStatement;
@@ -98,4 +99,40 @@ public class CategoriaDAO {
             throw new PersistenceException("Erro ao buscar categoria: " + e.getMessage());
         }  
     }
+    // Atualizar
+    public boolean atualizar(Categoria categoria) throws PersistenceException {
+    String sql = "UPDATE usuarios SET nm_categoria WHERE id_categoria";
+    
+    try (Connection conexao = ConexaoBanco.conectar();
+         PreparedStatement stmt = conexao.prepareStatement(sql)) {
+        
+        // Defina os parâmetros de acordo com as colunas que você quer atualizar
+        stmt.setString(1, categoria.getNome());
+
+        // Condição WHERE: ID do usuário a ser atualizado
+        stmt.setInt(2, categoria.getID()); // Assumindo que seu POJO Usuario tem um getID()
+        
+        int linhasAfetadas = stmt.executeUpdate();
+        return linhasAfetadas > 0; // Retorna true se a atualização foi bem-sucedida
+        
+    } catch (SQLException e) {
+        throw new PersistenceException("Erro ao atualizar usuário: " + e.getMessage());
+    }
+}
+    // Deletar
+    public boolean deletar(int id) throws PersistenceException {
+    String sql = "DELETE FROM usuarios WHERE id_usuario = ?"; // Adapte a tabela e a coluna ID
+    
+    try (Connection conexao = ConexaoBanco.conectar();
+         PreparedStatement stmt = conexao.prepareStatement(sql)) {
+        
+        stmt.setInt(1, id);
+        
+        int linhasAfetadas = stmt.executeUpdate();
+        return linhasAfetadas > 0; // Retorna true se a deleção foi bem-sucedida
+        
+    } catch (SQLException e) {
+        throw new PersistenceException("Erro ao deletar usuário: " + e.getMessage(), e);
+    }
+}
 }
