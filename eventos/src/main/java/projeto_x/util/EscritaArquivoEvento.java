@@ -36,6 +36,8 @@ public class EscritaArquivoEvento {
             linha.append(evento.getDescricao()).append("|");
             linha.append(evento.getDataHora().format(FORMATTER)).append("|");
             linha.append(evento.getCapacidade()).append("|");
+            linha.append(evento.getLatitude()).append("|");
+            linha.append(evento.getLongitude()).append("|");
 
             // Dados do Endereço do Evento
             if (evento.getEndereco() != null) {

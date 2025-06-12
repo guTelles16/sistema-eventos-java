@@ -1,23 +1,23 @@
 package projeto_x.model;
 
 public class Categoria {
-    private int id;
+    private Integer id;
     private String nome;
 
-    public Categoria(int id, String nome) {
-        setNome(nome);
+    public Categoria(Integer id, String nome) {
         setID(id);
+        setNome(nome);
     }
     
     public Categoria(String nome) {
         setNome(nome);
     }
 
-    public int getID() {
+    public Integer getID() {
         return id;
     }
 
-    public void setID(int id) {
+    public void setID(Integer id) {
         this.id = id;
     }
 

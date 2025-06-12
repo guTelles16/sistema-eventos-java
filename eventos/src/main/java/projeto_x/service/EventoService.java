@@ -2,6 +2,7 @@ package projeto_x.service;
 
 import java.sql.Connection;
 import java.sql.PreparedStatement;
+import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
@@ -14,11 +15,10 @@ import projeto_x.dao.EventoDAO;
 import projeto_x.dao.UsuarioDAO;
 import projeto_x.dao.EnderecoDAO;
 import projeto_x.dao.CategoriaDAO;
-import projeto_x.dao.Confirmacao_PresencaDAO;
 import projeto_x.model.Categoria;
-import projeto_x.model.Confirmacao_Presenca;
 import projeto_x.model.Endereco;
 import projeto_x.model.Evento;
+import projeto_x.model.Usuario;
 import projeto_x.util.PersistenceException;
 import projeto_x.util.ConexaoBanco;
 import projeto_x.util.GeolocalizacaoUtil;
@@ -29,31 +29,29 @@ public class EventoService {
     private UsuarioDAO usuarioDAO;
     private EnderecoDAO enderecoDAO;
     private CategoriaDAO categoriaDAO;
-    private Confirmacao_PresencaDAO confirmacaoPresencaDAO;
 
-    public EventoService(EventoDAO eventoDAO, UsuarioDAO usuarioDAO, EnderecoDAO enderecoDAO, CategoriaDAO categoriaDAO, Confirmacao_PresencaDAO confirmacaoPresencaDAO) {
+    public EventoService(EventoDAO eventoDAO, UsuarioDAO usuarioDAO, EnderecoDAO enderecoDAO, CategoriaDAO categoriaDAO) {
         this.eventoDAO = eventoDAO;
         this.usuarioDAO = usuarioDAO;
         this.enderecoDAO = enderecoDAO;
         this.categoriaDAO = categoriaDAO;
-        this.confirmacaoPresencaDAO = confirmacaoPresencaDAO;
     }
 
     /**
-     * Realiza o cadastro de um novo evento, a partir do nome, ID do endereço, ID da categoria, ID do usuário,
-     * data e hora do evento, descrição e limite de vagas.
-     * 
+     * Realiza o cadastro de um novo evento, a partir do nome, endereço, categoria, descrição, data/hora, capacidade e ID do criador.
+     *
      * @param nome Nome do evento.
-     * @param enderecoID ID do endereço (foreign key).
+     * @param endereco Objeto Endereco já preenchido e persistido.
      * @param categoriaID ID da categoria (foreign key).
-     * @param usuarioID ID do usuário (foreign key).
-     * @param dataHora Data e hora do evento.
      * @param descricao Descrição do evento.
+     * @param dataHora Data e hora do evento.
      * @param capacidade Limite de vagas do evento.
-     * @return true se o cadastro foi realizado com sucesso, false caso contrário.
+     * @param latitudeEvento Latitude do evento.
+     * @param longitudeEvento Longitude do evento.
+     * @param criadorID ID do usuário criador.
      * @throws PersistenceException Se ocorrer algum erro durante o cadastro (falha no banco de dados).
      */
-    public void cadastrarEvento (String nome, Endereco endereco, String categoria, String descricao, LocalDateTime dataHora, int capacidade, int criadorID)
+    public boolean cadastrarEvento(String nome, Endereco endereco, int categoriaID, String descricao, LocalDateTime dataHora, Integer capacidade, Double latitudeEvento, Double longitudeEvento, int criadorID)
             throws IllegalArgumentException, PersistenceException {
         if (nome == null || nome.trim().isEmpty()) {
             throw new IllegalArgumentException("O nome do evento não pode ser vazio!");
@@ -67,27 +65,51 @@ public class EventoService {
             endereco.getCEP() == null || endereco.getCEP().trim().isEmpty()) {
             throw new IllegalArgumentException("Dados de endereço incompletos ou inválidos!");
         }
-        
-        // Verifica se o endereço já está em uso
 
-        if (categoriaDAO.buscarCategoria(categoria) == null) {
+        Categoria categoria = categoriaDAO.buscarPorID(categoriaID);
+        if (categoria == null) {
             throw new IllegalArgumentException("Categoria inválida!");
         }
 
-        if (descricao == null || descricao.trim().isEmpty()){
+        if (descricao == null || descricao.trim().isEmpty()) {
             throw new IllegalArgumentException("A Descrição não pode ser vazia!");
         }
 
         if (capacidade <= 0) {
-            throw new IllegalArgumentException("A Capacidade não pode ser menor que zero!");
+            throw new IllegalArgumentException("A Capacidade não pode ser menor ou igual a zero!");
         }
 
-        if (usuarioDAO.buscarPorID(criadorID) == null && criadorID < 0) {
+        Usuario criador = usuarioDAO.buscarPorID(criadorID);
+        if (criador == null) {
             throw new IllegalArgumentException("ID do usuário inválido!");
         }
 
-        if (verificarDataHora(dataHora) != true)  {
-            throw new IllegalArgumentException("A data e hora do evento invalida");
+        if (!verificarDataHora(dataHora)) {
+            throw new IllegalArgumentException("A data e hora do evento é inválida");
+        }
+
+        if (latitudeEvento != null && (latitudeEvento < -90.0 || latitudeEvento > 90.0)) {
+            throw new IllegalArgumentException("Latitude inválida: deve estar entre -90 e +180!");
+        }
+
+        if (longitudeEvento != null && (longitudeEvento < -180.0 || longitudeEvento > 180.0)) {
+            throw new IllegalArgumentException("Longitude inválida: deve estar entre -180 e +180!");
+        }
+
+        // Cria o objeto Evento com as informações fornecidas
+        Evento novoEvento = new Evento(
+            null, nome, endereco, categoria, dataHora, descricao, capacidade,
+            latitudeEvento != null ? latitudeEvento : 0.0,
+            longitudeEvento != null ? longitudeEvento : 0.0,
+            criador
+        );
+
+        // Salva o evento no banco de dados
+        try {
+            eventoDAO.salvar(novoEvento);
+            return true;
+        } catch (PersistenceException e) {
+            throw new PersistenceException("Erro ao cadastrar o evento: " + e.getMessage());
         }
     }
 
@@ -97,9 +119,20 @@ public class EventoService {
     }
 
     // Método para cadastrar uma categoria
-    public void cadastrarCategoria(Categoria categoria) throws PersistenceException {
-        if (categoria == null || categoria.getNome().trim().isEmpty()) {
+    public boolean cadastrarCategoria(String nome) throws PersistenceException {
+        if (nome == null || nome.trim().isEmpty()) {
             throw new IllegalArgumentException("Nome da categoria inválido!");
+        }
+
+        // Cria o objeto Categoria com as informações fornecidas
+        Categoria novaCategoria = new Categoria(null, nome);
+
+        // Salva a categoria no banco de dados
+        try {
+            categoriaDAO.salvar(novaCategoria);
+            return true;
+        } catch (PersistenceException e) {
+            throw new PersistenceException("Erro ao cadastrar a categoria: " + e.getMessage());
         }
     }
 
@@ -141,6 +174,98 @@ public class EventoService {
      * @throws PersistenceException Se ocorrer algum de erro ao listar todos os eventos (falha no banco de dados).
      */
     public List<Evento> listarEventosCriadosPorUsuario(int idUsuarioCriador) throws PersistenceException {
+        List<Evento> eventosCriados = eventoDAO.listarTodosEventos();
+        String sql = "SELECT * FROM Evento WHERE usuario_criador_id = ?";
+
+        try (Connection connection = ConexaoBanco.conectar();
+             PreparedStatement stmt = connection.prepareStatement(sql)) {
+            
+            stmt.setInt(1, idUsuarioCriador);
+            try (ResultSet rs = stmt.executeQuery()) {
+                while (rs.next()) {
+                    Evento evento = construirEventoDoResultSet(rs);
+                    eventosCriados.add(evento);
+                }
+            }
         
+        } catch (SQLException e) {
+            throw new PersistenceException("Erro ao listar eventos criados pelo usuário: " + e.getMessage());
+        }
+        return eventosCriados;
+    }
+
+    /**
+     * Lista os eventos nos quais um usuário específico confirmou presença.
+     * 
+     * @param idUsuarioInscrito o ID do usuário inscrito.
+     * @return Lista de eventos nos quais o usuário confirmou presença.
+     * @throws PersistenceException Se ocorrer algum erro ao listar os eventos (falha no banco de dados).
+     */
+    public List<Evento> listarEventosInscritosPorUsuario(int idUsuarioInscrito) throws PersistenceException {
+        List<Evento> eventosInscritos = new ArrayList<>();
+        String sql = "SELECT e.* FROM Evento e " +
+                     "JOIN Confirmacao_Presenca cp ON e.id_evento = cp.evento_id " +
+                     "WHERE cp.usuario_id = ?";
+
+        try (Connection connection = ConexaoBanco.conectar();
+             PreparedStatement stmt = connection.prepareStatement(sql)) {
+            
+            stmt.setInt(1, idUsuarioInscrito);
+            try (ResultSet rs = stmt.executeQuery()) {
+                while (rs.next()) {
+                    Evento evento = construirEventoDoResultSet(rs);
+                    eventosInscritos.add(evento);
+                }
+            }    
+        } catch (SQLException e) {
+            throw new PersistenceException("Erro ao listar eventos inscritos pelo usuário: " + e.getMessage());
+        
+        } catch (PersistenceException e) {
+            throw new PersistenceException("Erro ao buscar dados do evento: " + e.getMessage());
+        }
+        return eventosInscritos;
+    }
+
+    /**
+     * Método auxiliar para evitar duplicação de código ao construir o objeto Evento.
+     * 
+     * @param rs ResultSet contendo os dados do evento.
+     * @return O objeto evento construído a partir dos dados do ResultSet.
+     * @throws PersistenceException Se ocorrer algum erro ao buscar os dados do evento (falha no banco de dados).
+     */
+    private Evento construirEventoDoResultSet(ResultSet rs) throws SQLException, PersistenceException {
+        Integer idEvento = (Integer) rs.getObject("id_evento");
+        String nomeEvento = rs.getString("nm_evento");
+        LocalDateTime dataHoraEvento = rs.getTimestamp("dt_hr_evento").toLocalDateTime();
+        String descricaoEvento = rs.getString("ds_evento");
+        Integer capacidadeEvento = (Integer) rs.getObject("qt_limite_vagas_evento");
+        Double latitudeEvento = (Double) rs.getObject("latitude_evento");
+        Double longitudeEvento = (Double) rs.getObject("longitude_evento");
+
+        int enderecoID = rs.getInt("endereco_id");
+        Endereco enderecoLocalEvento = (enderecoID > 0) ? enderecoDAO.buscarPorID(enderecoID) : null;
+        if (enderecoLocalEvento == null) {
+            throw new PersistenceException("ID do endereço do evento inválido ou inexistente!");
+        }
+
+        int categoriaID = rs.getInt("categoria_id");
+        Categoria categoriaEvento = (categoriaID > 0) ? categoriaDAO.buscarPorID(categoriaID) : null;
+        if (categoriaEvento == null) {
+            throw new PersistenceException("ID da categoria do evento inválido ou inexistente!");
+        }
+
+        int criadorID = rs.getInt("usuario_criador_id");
+        Usuario criador = (criadorID > 0) ? usuarioDAO.buscarPorID(criadorID) : null;
+        if (criador == null) {
+            throw new PersistenceException("ID do criador do evento inválido ou inexistente!");
+        }
+
+        return new Evento(
+            idEvento, nomeEvento, enderecoLocalEvento, categoriaEvento, dataHoraEvento,
+            descricaoEvento, capacidadeEvento,
+            latitudeEvento != null ? latitudeEvento : 0.0,
+            longitudeEvento != null ? longitudeEvento : 0.0,
+            criador
+        );
     }
 }
