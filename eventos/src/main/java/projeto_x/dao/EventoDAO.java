@@ -6,6 +6,7 @@ import projeto_x.model.Categoria;
 import projeto_x.model.Endereco;
 
 import projeto_x.util.ConexaoBanco;
+import projeto_x.util.GeolocalizacaoUtil;
 import projeto_x.util.PersistenceException;
 
 import java.sql.Connection;
@@ -16,7 +17,10 @@ import java.sql.Statement;
 import java.sql.Timestamp;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.Comparator;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 public class EventoDAO {
     private UsuarioDAO usuarioDAO;
@@ -230,4 +234,10 @@ public class EventoDAO {
         }
         return eventos;
     }
+
+    /**
+     * Busca os eventos criados por um usuário específico.
+     * 
+     * @param idCriador ID do usuário criador.
+     */
 }

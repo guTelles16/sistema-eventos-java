@@ -4,16 +4,24 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.Comparator;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 import projeto_x.dao.EventoDAO;
 import projeto_x.dao.UsuarioDAO;
 import projeto_x.dao.EnderecoDAO;
 import projeto_x.dao.CategoriaDAO;
+import projeto_x.dao.Confirmacao_PresencaDAO;
 import projeto_x.model.Categoria;
+import projeto_x.model.Confirmacao_Presenca;
 import projeto_x.model.Endereco;
 import projeto_x.model.Evento;
 import projeto_x.util.PersistenceException;
 import projeto_x.util.ConexaoBanco;
+import projeto_x.util.GeolocalizacaoUtil;
 
 
 public class EventoService {
@@ -21,12 +29,14 @@ public class EventoService {
     private UsuarioDAO usuarioDAO;
     private EnderecoDAO enderecoDAO;
     private CategoriaDAO categoriaDAO;
+    private Confirmacao_PresencaDAO confirmacaoPresencaDAO;
 
-    public EventoService(EventoDAO eventoDAO, UsuarioDAO usuarioDAO, EnderecoDAO enderecoDAO, CategoriaDAO categoriaDAO) {
+    public EventoService(EventoDAO eventoDAO, UsuarioDAO usuarioDAO, EnderecoDAO enderecoDAO, CategoriaDAO categoriaDAO, Confirmacao_PresencaDAO confirmacaoPresencaDAO) {
         this.eventoDAO = eventoDAO;
         this.usuarioDAO = usuarioDAO;
         this.enderecoDAO = enderecoDAO;
         this.categoriaDAO = categoriaDAO;
+        this.confirmacaoPresencaDAO = confirmacaoPresencaDAO;
     }
 
     /**
@@ -91,5 +101,46 @@ public class EventoService {
         if (categoria == null || categoria.getNome().trim().isEmpty()) {
             throw new IllegalArgumentException("Nome da categoria inválido!");
         }
+    }
+
+    public List<Evento> buscarEventosProximos(Double latUsuario, Double lonUsuario, Double raioMaximoKm) throws PersistenceException {
+        List<Evento> todosEventos = eventoDAO.listarTodosEventos();
+        List<Evento> eventosProximosOrdenados = new ArrayList<>();
+
+        // Map para armazenar o evento e sua distância para ordenação
+        Map<Evento, Double> eventosComDistancia = new HashMap<>();
+
+        for (Evento evento : todosEventos) {
+            Double latEvento = evento.getLatitude();
+            Double lonEvento = evento.getLongitude();
+
+            Double distancia = GeolocalizacaoUtil.calcularDistanciaHaversine(latUsuario, lonUsuario, latEvento, lonEvento);
+
+            if (distancia <= raioMaximoKm) {
+                eventosComDistancia.put(evento, distancia);
+            }
+        }
+
+        // Ordenar a lista
+        List<Map.Entry<Evento, Double>> listaParaOrdenar = new ArrayList<>(eventosComDistancia.entrySet());
+
+        listaParaOrdenar.sort(Comparator.comparing(Map.Entry::getValue)); // Ordenar pela menor distância
+
+        for (Map.Entry<Evento, Double> entry : listaParaOrdenar) {
+            eventosProximosOrdenados.add(entry.getKey());
+        }
+
+        return eventosProximosOrdenados;
+    }
+
+    /**
+     * Lista os eventos criados por um usuário específico.
+     * 
+     * @param idUsuarioCriador O ID do usuário criador.
+     * @return Lista de eventos criados.
+     * @throws PersistenceException Se ocorrer algum de erro ao listar todos os eventos (falha no banco de dados).
+     */
+    public List<Evento> listarEventosCriadosPorUsuario(int idUsuarioCriador) throws PersistenceException {
+        
     }
 }
