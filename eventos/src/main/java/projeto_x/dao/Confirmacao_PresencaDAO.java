@@ -34,19 +34,71 @@ public class Confirmacao_PresencaDAO {
             PreparedStatement stmt = conexao.prepareStatement(sql);
 
             if (confirmacao.getUsuario() != null && confirmacao.getUsuario().getID() > 0) {            
-                stmt.setInt(1, confirmacao.getUsuario().getID());
+                throw new PersistenceException("Usuário inválido ou ID do usuário não definido para salvar confirmação!");    
             }
 
             if (confirmacao.getEvento() != null && confirmacao.getEvento().getID() > 0) {
-                stmt.setInt(2, confirmacao.getEvento().getID());
+                throw new PersistenceException("Evento inválido ou ID do evento não definido para salvar confirmação!");
             }
 
+            stmt.setInt(1, confirmacao.getUsuario().getID());
+            stmt.setInt(2, confirmacao.getEvento().getID());
             stmt.setTimestamp(3, Timestamp.valueOf(confirmacao.getDataHoraConfirmacao()));
             stmt.setString(4, confirmacao.getStatus());
 
             stmt.executeUpdate();
         } catch (SQLException e) {
             throw new PersistenceException("Erro ao salvar confirmação de presença: " + e.getMessage());
+        }
+    }
+
+    /**
+     * Salva uma nova confirmação de presença no banco de dados.
+     * 
+     * @param idUsuario ID do usuário.
+     * @param idEvento ID do evento.
+     * @return true se a confirmação foi salva com sucesso, false caso contrário.
+     * @throws PersistenceException Se ocorrer um erro no banco de dados.
+     */
+    public boolean salvarConfirmacao(int idUsuario, int idEvento) throws PersistenceException {
+        String sql = "INSERT INTO confirmacoes_presenca (usuario_id, evento_id, dt_hr_confirmacao) VALUES (?, ?, ?)";
+        try (Connection conexao = ConexaoBanco.conectar();
+             PreparedStatement stmt = conexao.prepareStatement(sql)) {
+            
+            stmt.setInt(1, idUsuario);
+            stmt.setInt(2, idEvento);
+            stmt.setObject(3, LocalDateTime.now());
+
+            int linhasAfetadas = stmt.executeUpdate();
+            return linhasAfetadas > 0;
+        } catch (SQLException e) {
+            throw new PersistenceException("Erro ao salvar confirmação de presença: " + e.getMessage());
+        }
+    }
+
+    /**
+     * Verifica se um usuário já está inscrito em um determinado evento.
+     * 
+     * @param idUsuario ID do usuário.
+     * @param idEvento ID do evento.
+     * @return true se o usuário já está inscrito, false caso contrário.
+     * @throws PersistenceException Se ocorrer um erro no banco de dados.
+     */
+    public boolean verificarInscricaoExistente(int idUsuario, int idEvento) throws PersistenceException {
+        String sql = "SELECT COUNT(*) FROM confirmacoes_presenca WHERE usuario_id = ? AND evento_id = ?";
+        try (Connection conexao = ConexaoBanco.conectar();
+             PreparedStatement stmt = conexao.prepareStatement(sql)) {
+            
+            stmt.setInt(1, idUsuario);
+            stmt.setInt(2, idEvento);
+            try (ResultSet rs = stmt.executeQuery()) {
+                if (rs.next()) {
+                    return rs.getInt(1) > 0; // Se a contagem for maior que 0, a inscrição existe
+                }
+            }
+            return false;
+        } catch (SQLException e) {
+            throw new PersistenceException("Erro ao verificar inscrição existente: " + e.getMessage());
         }
     }
 
@@ -59,7 +111,7 @@ public class Confirmacao_PresencaDAO {
      * @throws PersistenceException Se ocorrer algum erro ao buscar a confirmação (falha no banco de dados).
      */
     public Confirmacao_Presenca buscarPorUsuarioEvento(int usuarioID, int eventoID) throws PersistenceException {
-        String sql = "SELECT dt_hr_confirmacao, st_confirmacao_evento AS status_confirmacao, qt_total_confirmacoes AS total_confirmacoes " +
+        String sql = "SELECT dt_hr_confirmacao, st_confirmacao_event " +
                     "FROM confirmacoes_presenca " +
                     "WHERE usuario_id = ? AND evento_id = ?";
         
@@ -77,7 +129,6 @@ public class Confirmacao_PresencaDAO {
                     // Carregar os dados da própria Confirmacao_Presenca
                     LocalDateTime dataHoraConfirmacao = rs.getTimestamp("dt_hr_confirmacao").toLocalDateTime();
                     String statusConfirmacao = rs.getString("status_confirmacao");
-                    int totalConfirmacoes = rs.getInt("total_confirmacoes");
 
                     // Busca os objetos Usuario e Evento
                     Usuario usuarioInscrito = usuarioDAO.buscarPorID(usuarioID);
@@ -92,9 +143,11 @@ public class Confirmacao_PresencaDAO {
                         throw new PersistenceException("Evento com ID " + eventoID + "não encontrado para confirmação de presença!");
                     }
 
+                    int totalConfirmacoes = contarConfirmacoesPorEvento(eventoID);
+
                     return new Confirmacao_Presenca(usuarioInscrito, eventoConfirmado, dataHoraConfirmacao, statusConfirmacao, totalConfirmacoes);
                 } else {
-                    throw new PersistenceException("Confirmação de presença não encontrada para o usuário com ID: " + usuarioID + " e evento com ID: " + eventoID);
+                    return null;
                 }
             }
         
@@ -116,59 +169,105 @@ public class Confirmacao_PresencaDAO {
         int total = 0; // Inicializa o total como 0
         
         try (Connection conexao = ConexaoBanco.conectar()) {
-            PreparedStatement stmt = conexao.prepareStatement(sql, PreparedStatement.RETURN_GENERATED_KEYS);
+            PreparedStatement stmt = conexao.prepareStatement(sql);
             // Define o ID do evento no placeholder (?)
             stmt.setInt(1, eventoID);
 
             // Executa a consulta e obtém o resultado
             try (ResultSet rs = stmt.executeQuery()) {
-                if (!rs.next()) {
-                    throw new PersistenceException("Nenhuma confirmação de presença encontrada para o ID do evento: " + eventoID);
+                if (rs.next()) {
+                    total = rs.getInt("total");
                 }
-
-                total = rs.getInt("qt_total_confirmacoes");
             }
+        
         } catch (SQLException e) {
             System.err.println("Erro SQL ao contar confirmações de presença: " + e.getMessage());
             throw new PersistenceException("Erro ao contar confirmações de presença: " + e.getMessage());
         }
         return total; // Retorna o total de confirmações
     }
-    //Atualizar
-    public boolean atualizar(Confirmacao_Presenca confimacao) throws PersistenceException {
-    String sql = "UPDATE usuarios SET usuario_id, evento_id, dt_hr_confirmacao, status WHERE id_evento = ? AND id_usuario = ?";
-    
-    try (Connection conexao = ConexaoBanco.conectar();
-         PreparedStatement stmt = conexao.prepareStatement(sql)) {
+
+    /**
+     * Atualiza uma confirmação de presença existente no banco de dados (UPDATE).
+     * É baseada nas chaves compostas usuario_id e evento_id.
+     * 
+     * @param confirmacao Objeto Confirmacao_Presenca.
+     * @return true se a atualização for bem-sucedida, false caso contrário.
+     * @throws PersistenceException Se ocorrer algum erro ao atualizar dados (falha no banco de dados).
+     */
+    public boolean atualizar(Confirmacao_Presenca confirmacao) throws PersistenceException {
+        String sql = "UPDATE confirmacoes_presenca SET dt_hr_confirmacao = ?, status = ? WHERE usuario_id = ? AND evento_id = ?";
         
-        // Defina os parâmetros de acordo com as colunas que você quer atualizar
-        stmt.setString(1, confirmacao.getStatus());
-        stmt.setTimestamp(2, Timestamp.valueOf(confirmacao.getDataHoraConfirmacao()));
-        stmt.setString(3, confirmacao.getDataHora());
-        stmt.setInt(4, confirmacao.getUsuario().getID());
-        stmt.setInt(5, confirmacao.getEvento().getID());
+        try (Connection conexao = ConexaoBanco.conectar();
+             PreparedStatement stmt = conexao.prepareStatement(sql)) {
+            
+            // Validação para garantir que os IDs são válidos antes de usar
+            if (confirmacao.getUsuario() == null || confirmacao.getUsuario().getID() <= 0) {
+                throw new PersistenceException("Usuário inválido ou ID do usuário não definido para atualização.");
+            }
+
+            if (confirmacao.getEvento() == null || confirmacao.getEvento().getID() <= 0) {
+                throw new PersistenceException("Evento inválido ou ID do evento não definido para atualização.");
+            }
+
+            stmt.setTimestamp(1, Timestamp.valueOf(confirmacao.getDataHoraConfirmacao()));
+            stmt.setString(2, confirmacao.getStatus());
+            
+            // Condições WHERE
+            stmt.setInt(3, confirmacao.getUsuario().getID());
+            stmt.setInt(4, confirmacao.getEvento().getID());
+            
+            int linhasAfetadas = stmt.executeUpdate();
+            return linhasAfetadas > 0; // Retorna true se a atualização foi bem-sucedida
+            
+        } catch (SQLException e) {
+            throw new PersistenceException("Erro ao atualizar presença: " + e.getMessage());
+        }
+    }
+
+    /**
+     * Deleta uma confirmação de presença do banco de dados (DELETE).
+     * É baseada nas chaves composta de usuario_id e evento_id.
+     * 
+     * @param usuarioID ID do usuário (foreign key).
+     * @param eventoID ID do evento (foreign key). 
+     * @return true se a deleção for bem-sucedida, false caso contrário.
+     * @throws PersistenceException Se ocorrer algum erro ao deletar os dados (falha no banco de dados).
+     */
+    public boolean deletar(int usuarioID, int eventoID) throws PersistenceException {
+        String sql = "DELETE FROM confirmacoes_presenca WHERE usuario_id = ? AND evento_id = ?";
         
-        int linhasAfetadas = stmt.executeUpdate();
-        return linhasAfetadas > 0; // Retorna true se a atualização foi bem-sucedida
-        
-    } catch (SQLException e) {
-        throw new PersistenceException("Erro ao atualizar presença: " + e.getMessage(), e);
-    }
-}
-    // Deletar
-    public boolean deletar(int id) throws PersistenceException {
-    String sql = "DELETE FROM usuarios WHERE id_usuario = ?"; // Adapte a tabela e a coluna ID
-    
-    try (Connection conexao = ConexaoBanco.conectar();
-         PreparedStatement stmt = conexao.prepareStatement(sql)) {
-        
-        stmt.setInt(1, id);
-        
-        int linhasAfetadas = stmt.executeUpdate();
-        return linhasAfetadas > 0; // Retorna true se a deleção foi bem-sucedida
-        
-    } catch (SQLException e) {
-        throw new PersistenceException("Erro ao deletar presença: " + e.getMessage(), e);
-    }
-}
+        try (Connection conexao = ConexaoBanco.conectar();
+            PreparedStatement stmt = conexao.prepareStatement(sql)) {
+            
+            stmt.setInt(1, usuarioID);
+            stmt.setInt(2, eventoID);
+            
+            int linhasAfetadas = stmt.executeUpdate();
+            return linhasAfetadas > 0; // Retorna true se a deleção foi bem-sucedida
+            
+        } catch (SQLException e) {
+            throw new PersistenceException("Erro ao deletar presença: " + e.getMessage());
+        }
+    }
+
+    /**
+     * Deleta uma confirmação de presença do banco de dados (DELETE).
+     * É baseada nas chave usuario_id.
+     * 
+     * @param usuarioID ID do usuário (foreign key).
+     * @return true se a deleção for bem-sucedida, false caso contrário.
+     * @throws PersistenceException Se ocorrer algum erro ao deletar os dados (falha no banco de dados).
+     */
+    public boolean deletarConfirmacoesPorUsuario(int idUsuario) throws SQLException, PersistenceException {
+        String sql = "DELETE FROM confirmacoes_presenca WHERE usuario_id = ?";
+        try (Connection conexao = ConexaoBanco.conectar();
+            PreparedStatement stmt = conexao.prepareStatement(sql)) {
+            stmt.setInt(1, idUsuario);
+            int linhasAfetadas = stmt.executeUpdate();
+            return linhasAfetadas > 0 || linhasAfetadas == 0;
+        } catch (SQLException e) {
+            throw new PersistenceException("Erro ao deletar confirmações de presença do usuário: " + e.getMessage());
+        }
+    }
 }

@@ -18,7 +18,11 @@ public class Categoria {
     }
 
     public void setID(Integer id) {
-        this.id = id;
+        if (id != null && id > 0) {
+            this.id = id;
+        } else {
+            throw new IllegalArgumentException("ID da categoria inválido: deve ser maior que zero!");
+        }
     }
 
     public String getNome() {
@@ -26,7 +30,10 @@ public class Categoria {
     }
 
     public void setNome(String nome) {
-        this.nome = nome;
+        if (nome == null || nome.trim().isEmpty()) {
+            throw new IllegalArgumentException("Nome da categoria inválido: não pode ser nulo ou vazio!");
+        }
+        this.nome = nome.trim();
     }
 
     @Override

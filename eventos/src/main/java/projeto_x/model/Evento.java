@@ -48,8 +48,9 @@ public class Evento {
     public void setID(Integer id) {
         if (id != null && id > 0) {
             this.id = id;
+        } else {
+            throw new IllegalArgumentException("ID do evento inválido: deve ser maior que zero!");
         }
-        throw new IllegalArgumentException("ID inválido: deve ser maior que zero!");
     }
 
     public String getNome() {
@@ -57,7 +58,10 @@ public class Evento {
     }
 
     public void setNome(String nome) {
-        this.nome = nome;
+        if (nome == null || nome.trim().isEmpty()) {
+            throw new IllegalArgumentException("Nome do evento inválido: não pode ser nulo ou vazio!");
+        }
+        this.nome = nome.trim();
     }
     
     public Endereco getEndereco() {
@@ -66,7 +70,7 @@ public class Evento {
 
     public void setEndereco(Endereco endereco) {
         if (endereco == null) {
-            throw new IllegalArgumentException("Endereço não pode ser nulo.");
+            throw new IllegalArgumentException("Endereço não pode ser nulo!");
         }
         this.endereco = endereco;
     }
@@ -77,8 +81,8 @@ public class Evento {
 
     public void setCategoria(Categoria categoria) {
         if (categoria == null) {
-            throw new IllegalArgumentException("Categoria não pode ser nula.");
-        }
+            throw new IllegalArgumentException("Categoria não pode ser nula!");
+        } 
         this.categoria = categoria;
     }
 
@@ -87,6 +91,13 @@ public class Evento {
     }
 
     public void setDataHora(LocalDateTime dataHora) {
+        if (dataHora == null) {
+            throw new IllegalArgumentException("A data e hora do evento não podem ser nulas!");
+        }
+
+        if (dataHora.isBefore(LocalDateTime.now())) {
+            throw new IllegalArgumentException("A data do evento não pode ser no passado!");
+        }
         this.dataHora = dataHora;
     }
 
@@ -105,8 +116,9 @@ public class Evento {
     public void setCapacidade(Integer capacidade) {
         if (capacidade != null && capacidade > 0) {
             this.capacidade = capacidade;
+        } else {
+            throw new IllegalArgumentException("Capacidade inválida: deve ser maior que zero!");
         }
-        throw new IllegalArgumentException("Capacidade inválida: deve ser maior que zero!");
     }
 
     public Double getLatitude() {
@@ -125,7 +137,7 @@ public class Evento {
     }
 
     public void setLongitude(Double longitude) {
-        if (longitude != null && (longitude < -180.0 || longitude > 90.0)) {
+        if (longitude != null && (longitude < -180.0 || longitude > 180.0)) {
             throw new IllegalArgumentException("Longitude inválida: deve estar entre -180 e +180!");
         }
         this.longitude = longitude;
@@ -137,7 +149,7 @@ public class Evento {
 
     public void setCriador(Usuario criador) {
         if (criador == null) {
-            throw new IllegalArgumentException("Criador não pode ser nulo.");
+            throw new IllegalArgumentException("Criador não pode ser nulo!");
         }
         this.criador = criador;
     }

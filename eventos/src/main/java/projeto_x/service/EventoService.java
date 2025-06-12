@@ -15,6 +15,7 @@ import projeto_x.dao.EventoDAO;
 import projeto_x.dao.UsuarioDAO;
 import projeto_x.dao.EnderecoDAO;
 import projeto_x.dao.CategoriaDAO;
+import projeto_x.dao.Confirmacao_PresencaDAO;
 import projeto_x.model.Categoria;
 import projeto_x.model.Endereco;
 import projeto_x.model.Evento;
@@ -29,12 +30,14 @@ public class EventoService {
     private UsuarioDAO usuarioDAO;
     private EnderecoDAO enderecoDAO;
     private CategoriaDAO categoriaDAO;
+    private Confirmacao_PresencaDAO confirmacaoPresencaDAO;
 
-    public EventoService(EventoDAO eventoDAO, UsuarioDAO usuarioDAO, EnderecoDAO enderecoDAO, CategoriaDAO categoriaDAO) {
+    public EventoService(EventoDAO eventoDAO, UsuarioDAO usuarioDAO, EnderecoDAO enderecoDAO, CategoriaDAO categoriaDAO, Confirmacao_PresencaDAO confirmacao_PresencaDAO) {
         this.eventoDAO = eventoDAO;
         this.usuarioDAO = usuarioDAO;
         this.enderecoDAO = enderecoDAO;
         this.categoriaDAO = categoriaDAO;
+        this.confirmacaoPresencaDAO = confirmacao_PresencaDAO;
     }
 
     /**
@@ -227,6 +230,71 @@ public class EventoService {
     }
 
     /**
+     * Lista todos os eventos cadastrados no banco de dados.
+     * 
+     * @return Lista de objetos Eventos
+     * @throws PersistenceException Se ocorrer algum erro ao listar todos os eventos (falha no banco de dados).
+     */
+    public List<Evento> listarTodos() throws PersistenceException {
+        List<Evento> eventos = new ArrayList<>();
+        String sql = "SELECT * FROM eventos";
+
+        try (Connection connection = ConexaoBanco.conectar();
+             PreparedStatement stmt = connection.prepareStatement(sql);
+             ResultSet rs = stmt.executeQuery()) {
+                
+            while (rs.next()) {
+                Evento evento = construirEventoDoResultSet(rs);
+                eventos.add(evento);
+            }
+        
+        } catch (SQLException e) {
+            throw new PersistenceException("Erro ao listar eventos inscritos pelo usuário: " + e.getMessage());
+        } 
+        return eventos;
+    }
+
+    /**
+     * Inscreve um usuário em um evento.
+     * @param idUsuario O ID do usuário que deseja se inscrever (int primitivo é o mais comum para IDs).
+     * @param idEvento O ID do evento no qual o usuário deseja se inscrever.
+     * @return true se a inscrição foi bem-sucedida, false caso contrário (ex: evento não existe, vagas esgotadas, já inscrito).
+     * @throws PersistenceException Se ocorrer um erro de persistência.
+     * @throws IllegalArgumentException Se os IDs forem inválidos.
+     */
+    public boolean inscreverUsuarioEmEvento(int idUsuario, int idEvento) throws PersistenceException, IllegalArgumentException {
+        if (idUsuario <= 0 || idEvento <= 0) {
+            throw new IllegalArgumentException("IDs de usuário ou evento inválidos!");
+        }
+
+        Evento evento = eventoDAO.buscarPorID(idEvento);
+        if (evento == null) {
+            System.out.println("Evento não encontrado!");
+            return false;
+        }
+
+        try {
+            // Verificar se o usuário já está inscrito
+            if (confirmacaoPresencaDAO.verificarInscricaoExistente(idUsuario, idEvento)) {
+                System.out.println("Você já está inscrito neste evento!");
+                return false;
+            }
+
+            // Verificar se há vagas disponíveis
+            int vagasOcupadas = confirmacaoPresencaDAO.contarConfirmacoesPorEvento(idEvento);
+            if (vagasOcupadas >= evento.getCapacidade()) {
+                System.out.println("Desculpe, as vagas para este evento esgotaram!");
+                return false;
+            }
+
+            // Salvar a confirmação de presença
+            return confirmacaoPresencaDAO.salvarConfirmacao(idUsuario, idEvento);
+        } catch (PersistenceException e) {
+            throw e;
+        }
+    }
+
+    /**
      * Método auxiliar para evitar duplicação de código ao construir o objeto Evento.
      * 
      * @param rs ResultSet contendo os dados do evento.
@@ -240,7 +308,9 @@ public class EventoService {
         String descricaoEvento = rs.getString("ds_evento");
         Integer capacidadeEvento = (Integer) rs.getObject("qt_limite_vagas_evento");
         Double latitudeEvento = (Double) rs.getObject("latitude_evento");
+        if (rs.wasNull()) latitudeEvento = null; // Se for NULL no BD, será null no objeto
         Double longitudeEvento = (Double) rs.getObject("longitude_evento");
+        if (rs.wasNull()) longitudeEvento = null;
 
         int enderecoID = rs.getInt("endereco_id");
         Endereco enderecoLocalEvento = (enderecoID > 0) ? enderecoDAO.buscarPorID(enderecoID) : null;

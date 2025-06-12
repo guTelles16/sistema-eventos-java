@@ -50,8 +50,9 @@ public class Usuario {
     public void setID(Integer id) {
         if (id != null && id > 0) {
             this.id = id;
+        } else {
+            throw new IllegalArgumentException("ID do usuário inválido: deve ser maior que zero!");
         }
-        throw new IllegalArgumentException("ID inválido: deve ser maior que zero!");
     }
 
     public String getNome() {
@@ -60,9 +61,9 @@ public class Usuario {
 
     public void setNome(String nome) {
         if (nome == null || nome.trim().isEmpty()) {
-            throw new IllegalArgumentException("Nome inválido: não pode ser nulo ou vazio!");
+            throw new IllegalArgumentException("Nome de usuário inválido: não pode ser nulo ou vazio!");
         }
-        this.nome = nome;
+        this.nome = nome.trim();
     }
 
     public Endereco getEndereco() {

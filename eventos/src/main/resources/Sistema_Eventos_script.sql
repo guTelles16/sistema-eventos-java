@@ -23,7 +23,7 @@ CREATE TABLE IF NOT EXISTS usuarios (
     senha VARCHAR(255) NOT NULL,
     latitude_usuario DECIMAL(10, 8),
     longitude_usuario DECIMAL(11, 8),
-    FOREIGN KEY (endereco_id) REFERENCES enderecos(id_endereco)
+    FOREIGN KEY (endereco_id) REFERENCES enderecos(id_endereco) ON DELETE SET NULL
 );
 
 CREATE TABLE IF NOT EXISTS eventos (
@@ -37,9 +37,9 @@ CREATE TABLE IF NOT EXISTS eventos (
     qt_limite_vagas_evento INT DEFAULT 0,
     latitude_evento DECIMAL(10,8),
     longitude_evento DECIMAL(11, 8),
-    FOREIGN KEY (endereco_id) REFERENCES enderecos(id_endereco),
-    FOREIGN KEY (categoria_id) REFERENCES categorias(id_categoria),
-    FOREIGN KEY (usuario_criador_id) REFERENCES usuarios(id_usuario)
+    FOREIGN KEY (endereco_id) REFERENCES enderecos(id_endereco) ON DELETE SET NULL,
+    FOREIGN KEY (categoria_id) REFERENCES categorias(id_categoria) ON DELETE NO ACTION,
+    FOREIGN KEY (usuario_criador_id) REFERENCES usuarios(id_usuario) ON DELETE CASCADE
 );
 
 CREATE TABLE IF NOT EXISTS confirmacoes_presença (
@@ -50,8 +50,8 @@ CREATE TABLE IF NOT EXISTS confirmacoes_presença (
     qt_total_confirmacoes INT DEFAULT 0, -- Inicializa com 0, incrementa a cada confirmação
     UNIQUE (usuario_id, evento_id), -- Garante que o usuário só pode confirmar presença em um evento uma vez
     PRIMARY KEY (usuario_id, evento_id),
-    FOREIGN KEY (usuario_id) REFERENCES usuarios(id_usuario),
-    FOREIGN KEY (evento_id) REFERENCES eventos(id_evento)
+    FOREIGN KEY (usuario_id) REFERENCES usuarios(id_usuario) ON DELETE CASCADE,
+    FOREIGN KEY (evento_id) REFERENCES eventos(id_evento) ON DELETE CASCADE
 );
 
 -- Inserir algumas categorias inicias

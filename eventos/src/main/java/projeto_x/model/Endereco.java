@@ -2,14 +2,14 @@ package projeto_x.model;
 
 // Classe para representar o Endereço (atributo composto)
 public class Endereco {
-    private int id;
+    private Integer id;
     private String logradouro;
     private String numeroLogradouro;
     private String complemento;
     private String bairro;
     private String cep;
 
-    public Endereco(int id, String logradouro, String numeroLogradouro, String complemento, String bairro, String cep) {
+    public Endereco(Integer id, String logradouro, String numeroLogradouro, String complemento, String bairro, String cep) {
         setID(id);
         setLogradouro(logradouro);
         setNumeroLogradouro(numeroLogradouro);
@@ -26,15 +26,16 @@ public class Endereco {
         setCEP(cep);
     }
 
-    public int getID() {
+    public Integer getID() {
         return id;
     }
 
-    public void setID(int id) {
-        if (id <= 0) {
+    public void setID(Integer id) {
+        if (id != null && id <= 0) {
+            this.id = id;
+        } else {
             throw new IllegalArgumentException("ID inválido: deve ser maior que zero!");
         }
-        this.id = id;
     }
     
     public String getLogradouro() {
@@ -42,10 +43,10 @@ public class Endereco {
     }
 
     public void setLogradouro(String logradouro) {
-        if (logradouro == null || logradouro.isEmpty()) {
+        if (logradouro == null || logradouro.trim().isEmpty()) {
             throw new IllegalArgumentException("Logradouro inválido: não pode ser nulo ou vazio!");
         }
-        this.logradouro = logradouro;
+        this.logradouro = logradouro.trim();
     }
 
     public String getNumeroLogradouro() {
@@ -69,9 +70,6 @@ public class Endereco {
     }
 
     public void setComplemento(String complemento) {
-        if (complemento == null || complemento.trim().isEmpty()) {
-            throw new IllegalArgumentException("Complemento inválido: não pode ser nulo ou vazio!");
-        }
         this.complemento = complemento;
     }
 
@@ -83,20 +81,16 @@ public class Endereco {
         if (bairro == null || bairro.trim().isEmpty()) {
             throw new IllegalArgumentException("Bairro inválido: não pode ser nulo ou vazio!");
         }
-        this.bairro = bairro;
+        this.bairro = bairro.trim();
     }
 
     public String getCEP() {
         return cep;
     }
 
-    public void setCEP(String cep) {
-        if (cep == null || cep.trim().isEmpty()) {
-            throw new IllegalArgumentException("CEP inválido: não pode ser nulo ou vazio!");
-        }
-        
-        if (!validarCEP(cep)) {
-            throw new IllegalArgumentException("CEP inválido: deve conter 8 dígitos númericos e não pode ser uma sequência de dígitos iguais!");
+    public void setCEP(String cep) {    
+        if (!isCEPValido(cep)) {
+            throw new IllegalArgumentException("CEP inválido: deve conter 8 dígitos númericos e não pode ser uma sequência repetida!");
         }
         // Armazena o CEP no formato limpo (sem hífen)
         this.cep = cep.replaceAll("[^0-9]", "");
@@ -123,31 +117,21 @@ public class Endereco {
         }
     }
 
-    public static boolean validarFormatoCEP(String cep) {
-        if (cep == null || cep.trim().isEmpty()) {
+    public static boolean isCEPValido(String cep) {
+        if (cep == null) {
             return false;
         }
 
-        // Remove possíveis hifens e espaços
+        // Remove tudo que não for digito numérico
         String cepLimpo = cep.replaceAll("[^0-9]", "");
 
-        // Verifica se o CEP tem exatamente 8 dígitos
-        return cepLimpo.length() == 8 && cep.matches("^\\d{8}$");
-    }
-
-    public static boolean validarCEP(String cep) {
-        if (!validarFormatoCEP(cep)) {
+        // Verifica se o resultado tem 8 dígitos
+        if (cepLimpo.length() != 8) {
             return false;
         }
 
-        String cepLimpo = cep.replaceAll("[^0-9]", "");
-
-        // Verifica se o CEP não é uma sequência de dígitos iguais
+        // Verifica se não é uma sequência de dígitos repetidos
         if (cepLimpo.matches("(\\d)\\1{7}")) {
-            return false;
-        }
-
-        if (!isNumerico(cepLimpo)) {
             return false;
         }
 
