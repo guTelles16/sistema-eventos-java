@@ -4,6 +4,9 @@ import projeto_x.service.AutenticacaoService;
 import projeto_x.service.EventoService;
 import projeto_x.model.Usuario;
 import projeto_x.model.Evento;
+import projeto_x.dao.CategoriaDAO;
+import projeto_x.dao.EnderecoDAO;
+import projeto_x.dao.UsuarioDAO;
 import projeto_x.model.Categoria;
 import projeto_x.util.PersistenceException;
 
@@ -12,69 +15,63 @@ import java.util.Scanner;
 import java.util.Arrays;
 
 public class ConsoleUI {
-    private Scanner scanner = new Scanner(System.in); 
+    private static Scanner scanner = new Scanner(System.in); 
+    private static Usuario usuarioLogado;
     private AutenticacaoService autenticacaoService;
     private EventoService eventoService;
-    private Usuario usuarioLogado;
 
-    public ConsoleUI(AutenticacaoService autenticacaoService, EventoService eventoService) {
-        this.autenticacaoService = autenticacaoService;
-        this.eventoService = eventoService;
+    public static void main(String[] args) {
+        try {
+            EnderecoDAO enderecoDAO = new EnderecoDAO();
+            CategoriaDAO categoriaDAO = new CategoriaDAO();
+            UsuarioDAO usuarioDAO = new UsuarioDAO(enderecoDAO);
+
+            usuarioService = new UsuarioService()
     }
 
     public void iniciar() throws PersistenceException {
-        System.out.println("Bem-vindo ao sistema de gerenciamento de eventos!");
-        boolean rodando = true;
-        while (rodando) {
+        int opcao;
+        do {
+            System.out.println("\n--- BEM-VINDO AO ORGANIZADOR DE EVENTOS ---");
             exibirMenuPrincipal();
-            try {
-                int opcao = scanner.nextInt();
-                scanner.nextLine(); // Quebra de linha
 
+            try{
                 switch (opcao) {
                     case 1:
-                        menuLogin();
+                        fazerLogin();
                         break;
                     case 2:
-                        menuCadastro();
-                        break;
-                    case 3:
-                        // Se o usuário já estiver logado, exibe menu de usuário
-                        if (usuarioLogado != null) {
-                            menuUsuarioLogado();
-                        } else {
-                            System.out.println("Por favor, faça login para acessar esta opção!");
-                        }
+                    cadastrarNovoUsuario();
                         break;
                     case 0:
-                        rodando = false;
                         System.out.println("Saindo do sistema...Até logo!");
                         break;
                     default:
-                        System.out.println("Opção inválida! Por favor, escolha uma opção válida.");
+                        System.out.println("Opção inválida! Tente novamente.");
                 }
-            
-            } catch (InputMismatchException e) {
-                System.err.println("Entrada inválida! Por favor, digite um número.");
-                scanner.nextLine(); // Limpa o buffer do scanner
-            
+            } catch (IllegalArgumentException e) {
+                System.out.println("Erro de entrada: " + e.getMessage());
+                
             } catch (PersistenceException e) {
-                System.err.println("Ocorreu um erro inesperado no menu principal: " + e.getMessage());
+                System.out.println("Erro de banco de dados: " + e.getMessage());
+                System.out.println("Por favor, tente novamente mais tarde!");
             }
+        } while (opcao != 0 && usuarioLogado = null);
+
+        if (usuarioLogado != null) {
+
         }
-        scanner.close(); // Fecha o scanner ao sair
     }
 
     private void exibirMenuPrincipal() {
         System.out.println("\n--- Menu Principal ---");
-        System.out.println("1. Login");
-        System.out.println("2. Cadastro");
-        System.out.println("3. Acessar Menu de Usuário (necessário estar logado)");
+        System.out.println("1. Entrar (Login)");
+        System.out.println("2. Cadastrar-se");
         System.out.println("0. Sair");
         System.out.println("Escolha uma opção: ");
     }
 
-    private void menuLogin() throws PersistenceException {
+    private void fazerLogin() throws PersistenceException {
         System.out.println("\n--- Login ---");
         System.out.print("Email: ");
         String email = scanner.nextLine();
@@ -102,7 +99,7 @@ public class ConsoleUI {
         }
     }
 
-    private void menuCadastro() throws PersistenceException {
+    private void cadastrarNovoUsuario() throws PersistenceException {
         System.out.println("\n--- Cadastro de Usuário ---");
         System.out.print("Nome: ");
         String nome = scanner.nextLine();
@@ -154,7 +151,7 @@ public class ConsoleUI {
                         System.out.println("Criando novo evento...");
                         break;
                     case 3:
-                        eventoService.listarMeusEventos(usuarioLogado);
+                        eventoService.listarEventosInscritosPorUsuario(usuarioLogado);
                         System.out.println("Listando meus eventos...");
                         break;
                     case 0:
@@ -180,6 +177,7 @@ public class ConsoleUI {
         System.out.println("\n--- Cadastro de Evento ---");
         System.out.print("Nome: ");
         String nome = scanner.nextLine();
+        System.out.println("");
 
         try {
             boolean sucesso = eventoService.cadastrarEvento(nome);
@@ -221,8 +219,5 @@ public class ConsoleUI {
         } finally {
             scanner.close();
         }
-    }
-    public static void main(String[] args) {
-        
     }
 }

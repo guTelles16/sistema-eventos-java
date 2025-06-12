@@ -2,6 +2,7 @@ package projeto_x.service;
 
 import projeto_x.model.Endereco;
 import projeto_x.model.Usuario;
+import projeto_x.dao.EnderecoDAO;
 import projeto_x.dao.UsuarioDAO;
 import projeto_x.util.PersistenceException;
 import projeto_x.util.SenhaUtil;
@@ -10,6 +11,12 @@ import java.util.Arrays;
 
 public class AutenticacaoService {
     private UsuarioDAO usuarioDAO;
+    private EnderecoDAO enderecoDAO;
+
+    public AutenticacaoService(UsuarioDAO usuarioDAO, EnderecoDAO enderecoDAO) {
+        this.usuarioDAO = usuarioDAO;
+        this.enderecoDAO = enderecoDAO;
+    }
 
     /**
      * Realiza o cadastro de um novo usuário, a partir do nome, endereço, e-mail e senha.
