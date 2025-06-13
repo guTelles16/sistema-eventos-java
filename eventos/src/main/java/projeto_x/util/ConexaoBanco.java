@@ -7,12 +7,12 @@ import java.sql.SQLException;
 
 public class ConexaoBanco {
     // Carrega o .env
-    private static final Dotenv dotenv = Dotenv.configure().load();
+    private static Dotenv dotenv = Dotenv.load();
+    private static String url = dotenv.get("MYSQL_URL");
+    private static String user = dotenv.get("MYSQL_USER");
+    private static String password= dotenv.get("MYSQL_PASSWORD");
 
     public static Connection conectar() throws PersistenceException {
-        String url = dotenv.get("MYSQL_URL");
-        String user = dotenv.get("MYSQL_USER");
-        String password = dotenv.get("MYSQL_PASSWORD");
 
         // Verificação das variáveis de ambiente
         if (url == null || url.trim().isEmpty()) {
