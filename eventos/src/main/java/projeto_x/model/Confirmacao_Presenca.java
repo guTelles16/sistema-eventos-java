@@ -24,9 +24,6 @@ public class Confirmacao_Presenca {
     }
 
     public void setUsuario(Usuario usuario) {
-        if (usuario == null) {
-            throw new IllegalArgumentException("Usuário inválido: não pode ser nulo!");
-        }
         this.usuario = usuario;
     }
 
@@ -35,9 +32,6 @@ public class Confirmacao_Presenca {
     }
 
     public void setEvento(Evento evento) {
-        if (evento == null) {
-            throw new IllegalArgumentException("Evento inválido: não pode ser nulo!");
-        }
         this.evento = evento;
     }
 

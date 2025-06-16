@@ -14,6 +14,7 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.sql.Timestamp;
+import java.sql.Types;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
@@ -64,8 +65,18 @@ public class EventoDAO {
             stmt.setTimestamp(5, Timestamp.valueOf(evento.getDataHora()));
             stmt.setString(6, evento.getDescricao());
             stmt.setInt(7, evento.getCapacidade());
-            stmt.setDouble(8, evento.getLatitude());
-            stmt.setDouble(9, evento.getLongitude());
+             
+            if (evento.getLatitude() != null) {
+                stmt.setDouble(5, evento.getLatitude());
+            } else {
+                stmt.setNull(5, Types.DOUBLE);
+            }
+
+            if (evento.getLongitude() != null) {
+                stmt.setDouble(6, evento.getLongitude());
+            } else {
+                stmt.setNull(6, Types.DOUBLE);
+            }
             
             stmt.executeUpdate();
 
@@ -119,7 +130,7 @@ public class EventoDAO {
      * @throws PersistenceException Se ocorrer algum erro ao buscar todos os eventos (falha no banco de dados).
      */
     public List<Evento> listarTodosEventos() throws PersistenceException {
-        String sql = "SELECT* FROM eventos";
+        String sql = "SELECT * FROM eventos";
 
         List<Evento> eventos = new ArrayList<>();
 
@@ -243,7 +254,7 @@ public class EventoDAO {
      */
     public boolean deletarEventosPorCriador(int idCriador) throws PersistenceException {
         // SQL para deletar eventos onde o 'criador_id' corresponde
-        String sql = "DELETE FROM eventos WHERE criador_id = ?";
+        String sql = "DELETE FROM eventos WHERE usuario_criador_id = ?";
         
         try (Connection conexao = ConexaoBanco.conectar();
              PreparedStatement stmt = conexao.prepareStatement(sql)) {
@@ -275,21 +286,31 @@ public class EventoDAO {
         Double longitudeEvento = (Double) rs.getObject("longitude_evento");
 
         int enderecoID = rs.getInt("endereco_id");
-        Endereco enderecoLocalEvento = (enderecoID > 0) ? enderecoDAO.buscarPorID(enderecoID) : null;
-        if (enderecoLocalEvento == null) {
-            throw new PersistenceException("ID do endereço do evento inválido ou inexistente!");
+        Endereco enderecoLocalEvento = null;
+        if (enderecoID > 0) {
+            enderecoLocalEvento = enderecoDAO.buscarPorID(enderecoID);
+            // Lança a exceção apenas se o ID existia, mas o endereço não foi encontrado.
+            if (enderecoLocalEvento == null) {
+                throw new PersistenceException("Inconsistência de dados: Endereço com ID " + enderecoID + " não encontrado!");
+            }
         }
 
         int categoriaID = rs.getInt("categoria_id");
-        Categoria categoriaEvento = (categoriaID > 0) ? categoriaDAO.buscarPorID(categoriaID) : null;
-        if (categoriaEvento == null) {
-            throw new PersistenceException("ID da categoria do evento inválido ou inexistente!");
+        Categoria categoriaEvento = null;
+        if (categoriaID > 0) {
+            categoriaEvento = categoriaDAO.buscarPorID(categoriaID);
+            if (categoriaEvento == null) {
+                throw new PersistenceException("Inconsistência de dados: Categoria com ID " + categoriaID + " não encontrado!");
+            }
         }
 
         int criadorID = rs.getInt("usuario_criador_id");
-        Usuario criador = (criadorID > 0) ? usuarioDAO.buscarPorID(criadorID) : null;
-        if (criador == null) {
-            throw new PersistenceException("ID do criador do evento inválido ou inexistente!");
+        Usuario criador = null;
+        if (criadorID > 0) {
+            criador = usuarioDAO.buscarPorID(criadorID);
+            if (criador == null) {
+                throw new PersistenceException("Inconsistência de dados: Criador do evento com ID " + criadorID + " não encontrado!");
+            }
         }
 
         return new Evento(

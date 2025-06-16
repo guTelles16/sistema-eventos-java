@@ -28,8 +28,8 @@ public class ConexaoBanco {
         }
 
         // Tentativa de conexão com o banco de dados
-        try(Connection conexao = DriverManager.getConnection(url, user, password)) {
-            System.out.println("Conexão estabelecida com sucesso!");
+        try {
+            Connection conexao = DriverManager.getConnection(url, user, password);
             return conexao;
         } catch (SQLException e) {
             throw new PersistenceException("Erro ao conectar ao banco de dados: " + e.getMessage());

@@ -33,11 +33,11 @@ public class Confirmacao_PresencaDAO {
         try (Connection conexao = ConexaoBanco.conectar()) {
             PreparedStatement stmt = conexao.prepareStatement(sql);
 
-            if (confirmacao.getUsuario() != null && confirmacao.getUsuario().getID() > 0) {            
+            if (confirmacao.getUsuario() == null || confirmacao.getUsuario().getID() == null || confirmacao.getUsuario().getID() < 0) {
                 throw new PersistenceException("Usuário inválido ou ID do usuário não definido para salvar confirmação!");    
             }
 
-            if (confirmacao.getEvento() != null && confirmacao.getEvento().getID() > 0) {
+            if (confirmacao.getEvento() == null || confirmacao.getEvento().getID() == null || confirmacao.getEvento().getID() < 0) {
                 throw new PersistenceException("Evento inválido ou ID do evento não definido para salvar confirmação!");
             }
 
@@ -111,7 +111,7 @@ public class Confirmacao_PresencaDAO {
      * @throws PersistenceException Se ocorrer algum erro ao buscar a confirmação (falha no banco de dados).
      */
     public Confirmacao_Presenca buscarPorUsuarioEvento(int usuarioID, int eventoID) throws PersistenceException {
-        String sql = "SELECT dt_hr_confirmacao, st_confirmacao_event " +
+        String sql = "SELECT dt_hr_confirmacao, st_confirmacao_evento " +
                     "FROM confirmacoes_presenca " +
                     "WHERE usuario_id = ? AND evento_id = ?";
         
@@ -128,7 +128,7 @@ public class Confirmacao_PresencaDAO {
                 if (rs.next()) {
                     // Carregar os dados da própria Confirmacao_Presenca
                     LocalDateTime dataHoraConfirmacao = rs.getTimestamp("dt_hr_confirmacao").toLocalDateTime();
-                    String statusConfirmacao = rs.getString("status_confirmacao");
+                    String statusConfirmacao = rs.getString("st_confirmacao_evento");
 
                     // Busca os objetos Usuario e Evento
                     Usuario usuarioInscrito = usuarioDAO.buscarPorID(usuarioID);
@@ -264,8 +264,8 @@ public class Confirmacao_PresencaDAO {
         try (Connection conexao = ConexaoBanco.conectar();
             PreparedStatement stmt = conexao.prepareStatement(sql)) {
             stmt.setInt(1, idUsuario);
-            int linhasAfetadas = stmt.executeUpdate();
-            return linhasAfetadas > 0 || linhasAfetadas == 0;
+            stmt.executeUpdate();
+            return true;
         } catch (SQLException e) {
             throw new PersistenceException("Erro ao deletar confirmações de presença do usuário: " + e.getMessage());
         }

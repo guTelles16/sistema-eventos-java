@@ -63,10 +63,14 @@ public class EventoService {
         // Validação do Objeto Endereco
         if (endereco == null || endereco.getLogradouro() == null || endereco.getLogradouro().trim().isEmpty() ||
             endereco.getNumeroLogradouro() == null || endereco.getNumeroLogradouro().trim().isEmpty() ||
-            endereco.getComplemento() == null || endereco.getComplemento().trim().isEmpty() ||
             endereco.getBairro() == null || endereco.getBairro().trim().isEmpty() ||
             endereco.getCEP() == null || endereco.getCEP().trim().isEmpty()) {
             throw new IllegalArgumentException("Dados de endereço incompletos ou inválidos!");
+        }
+
+        if (endereco.getID() == null || endereco.getID() <= 0) {
+            int enderecoIDGerado = enderecoDAO.salvar(endereco);
+            endereco.setID(enderecoIDGerado); // Define o ID gerado no objeto Endereco
         }
 
         Categoria categoria = categoriaDAO.buscarPorID(categoriaID);

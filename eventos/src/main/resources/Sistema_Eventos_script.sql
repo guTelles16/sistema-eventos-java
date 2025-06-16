@@ -20,7 +20,7 @@ CREATE TABLE IF NOT EXISTS usuarios (
     nm_usuario VARCHAR(255) NOT NULL,
     endereco_id INT NOT NULL,
     email VARCHAR(255) NOT NULL UNIQUE,
-    senha VARCHAR(255) NOT NULL,
+    senha_hash VARCHAR(255) NOT NULL,
     latitude_usuario DECIMAL(10, 8),
     longitude_usuario DECIMAL(11, 8),
     FOREIGN KEY (endereco_id) REFERENCES enderecos(id_endereco) ON DELETE SET NULL

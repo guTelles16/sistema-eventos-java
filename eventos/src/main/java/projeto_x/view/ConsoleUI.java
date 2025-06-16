@@ -114,7 +114,7 @@ public class ConsoleUI {
         System.out.print("Bairro: "); String bairro = scanner.nextLine();
         System.out.print("CEP: "); String cep = scanner.nextLine();
 
-        Endereco endereco = new Endereco(0, logradouro, numero, complemento, bairro, cep);
+        Endereco endereco = new Endereco(null, logradouro, numero, complemento, bairro, cep);
         
         boolean cadastrado = autenticacaoService.cadastrarUsuario(nome, email, endereco, senhaArray);
 
@@ -244,12 +244,13 @@ public class ConsoleUI {
         System.out.print("Complemento (opcional): "); String complemento = scanner.nextLine();
         System.out.print("Bairro: "); String bairro = scanner.nextLine();
         System.out.print("CEP: "); String cep = scanner.nextLine();
-        Endereco enderecoEvento = new Endereco(0, logradouro, numero, complemento, bairro, cep);
+        Endereco enderecoEvento = new Endereco(null, logradouro, numero, complemento, bairro, cep);
 
         System.out.print("ID da Categoria (Ex: 1 para 'Show', 2 para 'Palestra'): "); int categoriaId = lerInteiro();
-        Categoria categoria = new Categoria(categoriaId, "");
+        System.out.println("Nome da categoria: "); String categoriaNome = scanner.nextLine(); 
+        Categoria categoria = new Categoria(categoriaId, categoriaNome);
 
-        Evento novoEvento = new Evento(0, nome, enderecoEvento, categoria, dataHora, descricao,
+        Evento novoEvento = new Evento(null, nome, enderecoEvento, categoria, dataHora, descricao,
                                        limiteVagas, latitude, longitude, usuarioLogado);
 
         boolean cadastrado = eventoService.cadastrarEvento(
@@ -382,7 +383,7 @@ public class ConsoleUI {
                 System.out.print("Complemento (opcional): "); String newComplemento = scanner.nextLine();
                 System.out.print("Bairro: "); String newBairro = scanner.nextLine();
                 System.out.print("CEP: "); String newCep = scanner.nextLine();
-                Endereco novoEndereco = new Endereco(0, newLogradouro, newNumero, newComplemento, newBairro, newCep);
+                Endereco novoEndereco = new Endereco(null, newLogradouro, newNumero, newComplemento, newBairro, newCep);
                 try {
                     int idNovoEndereco = enderecoDAO.salvar(novoEndereco);
                     novoEndereco.setID(idNovoEndereco);

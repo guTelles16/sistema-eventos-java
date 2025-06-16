@@ -125,23 +125,23 @@ public class AutenticacaoService {
         try {
             // Buscar o usuário pelo e-mail
             usuario = usuarioDAO.buscarPorEmail(email);
+
+            if (usuario == null) {
+                return null; // Não demonstra que o usuário não foi encontrado
+            }
+
+            // Verifica se a senha em texto claro corresponde ao hash armazenado
+            boolean senhaCorreta = SenhaUtil.verificarSenha(senhaPlana, usuario.getHashSenha());
+            
+            if (senhaCorreta) {
+                return usuario; // Login bem-sucedido
+            } else {
+                return null; // Senha incorreta
+            }
+        
         } catch (PersistenceException e) {
-            System.err.println("Erro interno ao buscar usuário para login: " + e.getMessage());
             throw new PersistenceException("Falha ao tentar fazer login. Erro no banco de dados.");
-        } finally {
-            Arrays.fill(senhaPlana, ' ');
-        }
-
-        if (usuario == null) {
-            return null; // Não demonstra que o usuário não foi encontrado
-        }
-
-        // Verifica se a senha em texto claro corresponde ao hash armazenado
-        boolean senhaCorreta = SenhaUtil.verificarSenha(senhaPlana, usuario.getHashSenha());
-        if (senhaCorreta) {
-            return usuario; // Login bem-sucedido
-        } else {
-            return null; // Senha incorreta
+        
         }
     }
 
@@ -208,14 +208,14 @@ public class AutenticacaoService {
             throw new IllegalArgumentException("Senha antiga incorreta!");
         }
 
-        // 3. Gerar o hash da nova senha
+        // Gerar o hash da nova senha
         String novoHashSenha = SenhaUtil.hashSenha(novaSenhaPlana);
 
-        // 4. Atualizar o hash da senha no objeto usuário
+        // Atualizar o hash da senha no objeto usuário
         usuario.setHashSenha(novoHashSenha);
 
         try {
-            // 5. Persistir o novo hash no banco de dados
+            // Persistir o novo hash no banco de dados
             return usuarioDAO.atualizarSenhaHash(usuario);
         } finally {
             // Garante que ambos os arrays de senha em texto claro sejam zerados
@@ -227,6 +227,7 @@ public class AutenticacaoService {
     /**
      * Deleta um usuário e todas as informações relacionadas a ele (eventos criados,
      * confirmações de presença, e o endereço associado).
+     * 
      * @param idUsuario O ID do usuário a ser deletado.
      * @return true se o usuário e seus dados relacionados foram deletados com sucesso, false caso contrário.
      * @throws PersistenceException Se ocorrer um erro no banco de dados.

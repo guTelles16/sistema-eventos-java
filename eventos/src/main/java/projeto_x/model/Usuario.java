@@ -48,7 +48,7 @@ public class Usuario {
     }
 
     public void setID(Integer id) {
-        if (id != null && id > 0) {
+        if (id == null || id > 0) {
             this.id = id;
         } else {
             throw new IllegalArgumentException("ID do usuário inválido: deve ser maior que zero!");
@@ -71,9 +71,6 @@ public class Usuario {
     }
 
     public void setEndereco(Endereco endereco) {
-        if (endereco == null) {
-            throw new IllegalArgumentException("Endereço inválido: não pode ser nulo!");
-        }
         this.endereco = endereco;
     }
 

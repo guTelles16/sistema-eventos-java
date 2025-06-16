@@ -1,7 +1,6 @@
 package projeto_x.util;
 
 import org.mindrot.jbcrypt.BCrypt;
-import java.util.Arrays;
 
 public class SenhaUtil {
     /**
@@ -15,22 +14,11 @@ public class SenhaUtil {
         // Converte o char[] para String
         String senhaString = new String(senhaPlana);
 
-        try {
-            // Gera um 'salt' aleatório
-            String salt = BCrypt.gensalt();
+        // Gera um 'salt' aleatório
+        String salt = BCrypt.gensalt();
 
-            // Aplica o algoritmo de hashing com o salt e a senha
-            String hashSenha = BCrypt.hashpw(senhaString, salt);
-
-            // Retorna o hash da senha
-            return hashSenha;
-        } finally {
-            // Zera o array de caracteres da senha em texto claro
-            Arrays.fill(senhaPlana, ' ');
-            
-            // Define a String senhaString como null
-            senhaString = null; 
-        }
+        // Aplica o algoritmo de hashing com o salt e a senha
+        return BCrypt.hashpw(senhaString, salt);
     }
 
     /**
@@ -44,13 +32,7 @@ public class SenhaUtil {
         // Converte o char[] para String
         String senhaString = new String(senhaPlana);
 
-        try {
-            // Verifica se a senha em texto claro corresponde ao hash armazenado
-            return BCrypt.checkpw(senhaString, hashSenha);
-        } finally {
-            // Zera o array de caracteres da senha em texto claro e torna a String como null
-            Arrays.fill(senhaPlana, ' ');
-            senhaString = null;
-        }
+        // Verifica se a senha em texto claro corresponde ao hash armazenado
+        return BCrypt.checkpw(senhaString, hashSenha);
     }
 }

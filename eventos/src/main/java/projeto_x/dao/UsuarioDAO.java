@@ -26,7 +26,7 @@ public class UsuarioDAO {
      * @throws PersistenceException Se ocorrer algum erro ao salvar o usuário (falha no banco de dados).
      */
     public int salvar(Usuario usuario) throws PersistenceException {
-        String sql = "INSERT INTO usuarios (nm_usuario, endereco_id, email, senha, latitude_usuario, longitude_usuario) VALUES (?, ?, ?, ?, ?, ?)";
+        String sql = "INSERT INTO usuarios (nm_usuario, endereco_id, email, senha_hash, latitude_usuario, longitude_usuario) VALUES (?, ?, ?, ?, ?, ?)";
     
         try (Connection conexao = ConexaoBanco.conectar()) {
             PreparedStatement stmt = conexao.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS);
@@ -36,7 +36,7 @@ public class UsuarioDAO {
             if (usuario.getEndereco() != null && usuario.getEndereco().getID() > 0) {
                 stmt.setInt(2, usuario.getEndereco().getID());
             } else {
-                stmt.setNull(2, Types.INTEGER);
+                throw new PersistenceException("Endereço do usuário é obrigatório e precisa ter um ID válido!");
             }
 
             stmt.setString(3, usuario.getEmail());
@@ -138,7 +138,7 @@ public class UsuarioDAO {
      * @throws PersistenceException Se ocorrer algum erro ao atualizar dados (falha no banco de dados).
      */
     public boolean atualizar(Usuario usuario) throws PersistenceException {
-        String sql = "UPDATE usuarios SET nm_usuario = ?, email = ?, senha = ?, endereco_id = ?, " +
+        String sql = "UPDATE usuarios SET nm_usuario = ?, email = ?, senha_hash = ?, endereco_id = ?, " +
                     "latitude_usuario = ?, longitude_usuario = ? WHERE id_usuario = ?";
     
         try (Connection conexao = ConexaoBanco.conectar();
@@ -238,14 +238,18 @@ public class UsuarioDAO {
         Integer idUsuario = (Integer) rs.getObject("id_usuario");
         String nomeUsuario = rs.getString("nm_usuario");
         String emailRecuperado = rs.getString("email");
-        String hashSenha = rs.getString("senha");
+        String hashSenha = rs.getString("senha_hash");
         Double latitudeUsuario = (Double) rs.getObject("latitude_usuario");
         Double longitudeUsuario = (Double) rs.getObject("longitude_usuario");
                     
         int enderecoID = rs.getInt("endereco_id");
-        Endereco enderecoUsuario = (enderecoID > 0) ? enderecoUsuario = enderecoDAO.buscarPorID(enderecoID) : null;
-        if (enderecoUsuario == null) {
-            throw new PersistenceException("Inconsistência de dados: Endereço com ID " + enderecoID + " não encontrado!");
+        Endereco enderecoUsuario = null;
+        if (enderecoID > 0) { // Tenta buscar o endereço se houver um ID
+            enderecoUsuario = enderecoDAO.buscarPorID(enderecoID);
+            // Lança a exceção apenas se o ID existia, mas o endereço não foi encontrado.
+            if (enderecoUsuario == null) {
+                throw new PersistenceException("Inconsistência de dados: Endereço com ID " + enderecoID + " não encontrado!");
+            }
         }
         
         return new Usuario(

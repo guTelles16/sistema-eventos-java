@@ -46,7 +46,7 @@ public class Evento {
     }
 
     public void setID(Integer id) {
-        if (id != null && id > 0) {
+        if (id == null || id > 0) {
             this.id = id;
         } else {
             throw new IllegalArgumentException("ID do evento inválido: deve ser maior que zero!");
@@ -69,9 +69,6 @@ public class Evento {
     }
 
     public void setEndereco(Endereco endereco) {
-        if (endereco == null) {
-            throw new IllegalArgumentException("Endereço não pode ser nulo!");
-        }
         this.endereco = endereco;
     }
 
@@ -80,9 +77,6 @@ public class Evento {
     }
 
     public void setCategoria(Categoria categoria) {
-        if (categoria == null) {
-            throw new IllegalArgumentException("Categoria não pode ser nula!");
-        } 
         this.categoria = categoria;
     }
 
@@ -93,10 +87,6 @@ public class Evento {
     public void setDataHora(LocalDateTime dataHora) {
         if (dataHora == null) {
             throw new IllegalArgumentException("A data e hora do evento não podem ser nulas!");
-        }
-
-        if (dataHora.isBefore(LocalDateTime.now())) {
-            throw new IllegalArgumentException("A data do evento não pode ser no passado!");
         }
         this.dataHora = dataHora;
     }
@@ -148,9 +138,6 @@ public class Evento {
     }
 
     public void setCriador(Usuario criador) {
-        if (criador == null) {
-            throw new IllegalArgumentException("Criador não pode ser nulo!");
-        }
         this.criador = criador;
     }
 

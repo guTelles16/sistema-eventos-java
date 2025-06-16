@@ -18,7 +18,7 @@ public class Categoria {
     }
 
     public void setID(Integer id) {
-        if (id != null && id > 0) {
+        if (id == null || id > 0) {
             this.id = id;
         } else {
             throw new IllegalArgumentException("ID da categoria inválido: deve ser maior que zero!");

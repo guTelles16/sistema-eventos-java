@@ -31,7 +31,7 @@ public class Endereco {
     }
 
     public void setID(Integer id) {
-        if (id != null && id <= 0) {
+        if (id == null || id > 0) {
             this.id = id;
         } else {
             throw new IllegalArgumentException("ID inválido: deve ser maior que zero!");
@@ -56,10 +56,6 @@ public class Endereco {
     public void setNumeroLogradouro(String numeroLogradouro) {
         if (numeroLogradouro == null || numeroLogradouro.trim().isEmpty()) {
             throw new IllegalArgumentException("Número do logradouro inválido: não pode ser nulo ou vazio!");
-        }
-
-        if (!isNumerico(numeroLogradouro)) {
-            throw new IllegalArgumentException("Número do logradouro inválido: deve ser numérico!");
         }
 
         this.numeroLogradouro = numeroLogradouro;
